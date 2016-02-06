@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <com.saiya.indoorposapp.ui.MapView
+        android:id="@+id/mv_positioning_map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/bg_grey"/>
+
+
+        <LinearLayout
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:layout_gravity="end"
+            android:background="@drawable/bg_settings"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btn_positioning_start"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_margin="16dp"
+                android:layout_gravity="center"
+                android:background="@drawable/positioning_btn_start_style"/>
+
+            <Button
+                android:id="@+id/btn_positioning_stop"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_margin="16dp"
+                android:layout_gravity="center"
+                android:background="@drawable/positioning_btn_stop_style"/>
+
+            <Button
+                android:id="@+id/btn_positioning_switch"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_margin="16dp"
+                android:layout_gravity="center"
+                android:background="@drawable/positioning_btn_switch_style"/>
+
+        </LinearLayout>
+
+</FrameLayout>

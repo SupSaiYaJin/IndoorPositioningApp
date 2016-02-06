@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/bg_grey">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="@string/fragment_updateMap_title"
+        android:textColor="@color/common_grey"
+        android:textSize="20sp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/bg_white">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.3dp"
+            android:background="@color/common_grey"/>
+
+        <EditText
+            android:id="@+id/edtTxt_updateMap_sceneName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:background="@color/bg_white"
+            android:hint="@string/fragment_updateMap_sceneNameHint"
+            android:padding="16dp"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.3dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@color/common_grey"/>
+
+        <EditText
+            android:id="@+id/edtTxt_updateMap_scale"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:inputType="numberDecimal"
+            android:background="@color/bg_white"
+            android:hint="@string/fragment_updateMap_scaleHint"
+            android:padding="16dp"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.3dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:background="@color/common_grey"/>
+
+        <EditText
+            android:id="@+id/edtTxt_updateMap_filePath"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:background="@color/bg_white"
+            android:hint="@string/fragment_updateMap_pathHint"
+            android:padding="16dp"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.3dp"
+            android:background="@color/common_grey"/>
+
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <Button
+            android:id="@+id/btn_updateMap_chooseSceneName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            style="?android:buttonBarButtonStyle"
+            android:background="@drawable/common_btn_style"
+            android:text="@string/fragment_updateMap_chooseSceneName"/>
+
+        <Button
+            android:id="@+id/btn_updateMap_chooseFile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            style="?android:buttonBarButtonStyle"
+            android:background="@drawable/common_btn_style"
+            android:text="@string/fragment_updateMap_chooseFile"/>
+
+        <Button
+            android:id="@+id/btn_updateMap_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            style="?android:buttonBarButtonStyle"
+            android:background="@drawable/common_btn_style"
+            android:text="@string/fragment_updateMap_confirm"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/fragment_updateMap_help"
+        android:textSize="20sp"/>
+
+</LinearLayout>

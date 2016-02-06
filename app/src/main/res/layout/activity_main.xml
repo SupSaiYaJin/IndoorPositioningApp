@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:saiya="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.saiya.indoorposapp.ui.MyViewPager
+        android:id="@+id/vp_main_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:context=".activities.MainActivity" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.3dp"
+        android:background="@color/common_grey" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal" >
+
+        <com.saiya.indoorposapp.ui.BottomTabView
+            android:id="@+id/btv_main_positioning"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:padding="5dp"
+            saiya:tab_icon="@drawable/main_icon_positioning"
+            saiya:text="@string/activity_main_positioning"
+            saiya:text_size="12sp" />
+
+        <com.saiya.indoorposapp.ui.BottomTabView
+            android:id="@+id/btv_main_updatefingerprint"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:padding="5dp"
+            saiya:tab_icon="@drawable/main_icon_updatefp"
+            saiya:text="@string/activity_main_fingerprint"
+            saiya:text_size="12sp" />
+
+        <com.saiya.indoorposapp.ui.BottomTabView
+            android:id="@+id/btv_main_updatemap"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:padding="5dp"
+            saiya:tab_icon="@drawable/main_icon_updatemap"
+            saiya:text="@string/activity_main_map"
+            saiya:text_size="12sp" />
+
+        <com.saiya.indoorposapp.ui.BottomTabView
+            android:id="@+id/btv_main_settings"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:padding="5dp"
+            saiya:tab_icon="@drawable/main_icon_settings"
+            saiya:text="@string/activity_main_settings"
+            saiya:text_size="12sp" />
+
+    </LinearLayout>
+
+</LinearLayout>

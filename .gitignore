@@ -1,0 +1,10 @@
+*.DS_STORE
+*.iml
+*~
+.idea/
+.gradle/
+gradle/
+build/
+local.properties
+gradlew
+gradlew.bat
