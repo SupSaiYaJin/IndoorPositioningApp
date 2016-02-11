@@ -161,9 +161,9 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                         float rssiSum = wifiScanResultSum.get(mac)[0];
                         float count = wifiScanResultSum.get(mac)[1];
                         wifiScanResultSum.put(mac, new float[]{rssiSum + rssi, count + 1});
-                    }
-                    else
+                    } else {
                         wifiScanResultSum.put(mac, new float[]{rssi, 1});
+                    }
                 }
                 if(i != numberOfAcquision - 1) {
                     try {
@@ -202,8 +202,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             }
             if(updateResult) {
                 return MainActivity.UPDATE_FP_SUCCEED;
-            }
-            else {
+            } else {
                 return MainActivity.NETWORK_ERROR;
             }
         }
@@ -275,8 +274,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             }
             if(updateResult) {
                 return MainActivity.UPDATE_FP_SUCCEED;
-            }
-            else {
+            } else {
                 return MainActivity.NETWORK_ERROR;
             }
         }

@@ -157,9 +157,8 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                     }
                     preferences.setLocationMethod(mSelectedWhich);
                     ((PositioningFragment) mActivity.getFragment(0)).setLocationMethod(mSelectedWhich);
-                }
                 //若点击单选项,仅改变mSelectedWhich的值
-                else {
+                } else {
                     mSelectedWhich = which;
                 }
             }
@@ -191,16 +190,20 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
             //按移动SeekBar的情况更新TextView
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (progress < 13)
+                if (progress < 13) {
                     tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN));
-                else if (progress >= 13 && progress < 38)
+                }
+                else if (progress >= 13 && progress < 38) {
                     tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN * 2));
-                else if (progress >= 38 && progress < 63)
+                }
+                else if (progress >= 38 && progress < 63) {
                     tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN * 3));
-                else if (progress >= 63 && progress < 88)
+                }
+                else if (progress >= 63 && progress < 88) {
                     tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN * 4));
-                else
+                } else {
                     tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN * 5));
+                }
             }
 
             @Override
@@ -214,17 +217,13 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                 int progress = seekBar.getProgress();
                 if (progress < 13) {
                     seekBar.setProgress(0);
-                }
-                else if (progress >= 13 && progress < 38) {
+                } else if (progress >= 13 && progress < 38) {
                     seekBar.setProgress(25);
-                }
-                else if (progress >= 38 && progress < 63) {
+                } else if (progress >= 38 && progress < 63) {
                     seekBar.setProgress(50);
-                }
-                else if (progress >= 63 && progress < 88) {
+                } else if (progress >= 63 && progress < 88) {
                     seekBar.setProgress(75);
-                }
-                else {
+                } else {
                     seekBar.setProgress(100);
                 }
             }
@@ -266,17 +265,13 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (progress < 13) {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(6));
-                }
-                else if (progress >= 13 && progress < 38) {
+                } else if (progress >= 13 && progress < 38) {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(7));
-                }
-                else if (progress >= 38 && progress < 63) {
+                } else if (progress >= 38 && progress < 63) {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(8));
-                }
-                else if (progress >= 63 && progress < 88) {
+                } else if (progress >= 63 && progress < 88) {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(9));
-                }
-                else {
+                } else {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(10));
                 }
             }
@@ -292,17 +287,13 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                 int progress = seekBar.getProgress();
                 if (progress < 13) {
                     seekBar.setProgress(0);
-                }
-                else if (progress >= 13 && progress < 38) {
+                } else if (progress >= 13 && progress < 38) {
                     seekBar.setProgress(25);
-                }
-                else if (progress >= 38 && progress < 63) {
+                } else if (progress >= 38 && progress < 63) {
                     seekBar.setProgress(50);
-                }
-                else if (progress >= 63 && progress < 88) {
+                } else if (progress >= 63 && progress < 88) {
                     seekBar.setProgress(75);
-                }
-                else {
+                } else {
                     seekBar.setProgress(100);
                 }
             }
@@ -344,17 +335,13 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (progress < 13) {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN));
-                }
-                else if (progress >= 13 && progress < 38) {
+                } else if (progress >= 13 && progress < 38) {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 2));
-                }
-                else if (progress >= 38 && progress < 63) {
+                } else if (progress >= 38 && progress < 63) {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 3));
-                }
-                else if (progress >= 63 && progress < 88) {
+                } else if (progress >= 63 && progress < 88) {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 4));
-                }
-                else {
+                } else {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 5));
                 }
             }
@@ -370,17 +357,13 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                 int progress = seekBar.getProgress();
                 if (progress < 13) {
                     seekBar.setProgress(0);
-                }
-                else if (progress >= 13 && progress < 38) {
+                } else if (progress >= 13 && progress < 38) {
                     seekBar.setProgress(25);
-                }
-                else if (progress >= 38 && progress < 63) {
+                } else if (progress >= 38 && progress < 63) {
                     seekBar.setProgress(50);
-                }
-                else if (progress >= 63 && progress < 88) {
+                } else if (progress >= 63 && progress < 88) {
                     seekBar.setProgress(75);
-                }
-                else {
+                } else {
                     seekBar.setProgress(100);
                 }
             }

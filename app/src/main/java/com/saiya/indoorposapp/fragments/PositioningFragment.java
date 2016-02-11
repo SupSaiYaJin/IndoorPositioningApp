@@ -166,9 +166,8 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         //若开启了自动更新地图,则直接从服务器重新下载地图文件
         if(preferences.getAutoUpdateMap()) {
             new DownloadMapTask().execute(mSceneName);
-        }
         //若未开启自动更新地图,则使用缓存在本地的地图文件,若本地文件有问题则从服务器重新下载文件
-        else {
+        } else {
             try (FileInputStream in = mActivity.openFileInput(mSceneName + ".jpg")){
                 Bitmap map = BitmapFactory.decodeStream(in);
                 if(map == null) {
@@ -226,8 +225,8 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      * 切换场景
      */
     private void switchScene() {
-        if(!isRunning)
-            new MainActivity.ChooseSceneTask((MainActivity)mActivity){
+        if(!isRunning) {
+            new MainActivity.ChooseSceneTask((MainActivity) mActivity) {
                 @Override
                 protected void onChooseScene(String sceneName, float mapScale) {
                     preferences.setLastSceneName(sceneName);
@@ -237,8 +236,9 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                     setMap();
                 }
             }.execute();
-        else
+        } else {
             Toast.makeText(mActivity, R.string.fragment_positioning_positioningRunning, Toast.LENGTH_SHORT).show();
+        }
     }
     /**
      * 下载地图的异步任务

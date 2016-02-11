@@ -29,8 +29,7 @@ public class Algorithms {
             }
             if(mid - start + 1 > K) {
                 findKStrongestRSSI(rssiList, start, mid - 1, K);
-            }
-            else {
+            } else {
                 findKStrongestRSSI(rssiList, mid + 1, end, K - (mid - start + 1));
             }
         }

@@ -204,10 +204,10 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
                             onChooseScene(mSceneList.get(mSelectedWhich).getSceneName(),
                                     mSceneList.get(mSelectedWhich).getScale());
                         }
-                    }
                     //若点击单选项,仅改变mSelectedWhich的值
-                    else
+                    } else {
                         mSelectedWhich = which;
+                    }
                 }
             };
             AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
@@ -448,8 +448,9 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         mWifiManager.startScan();
         List<ScanResult> scanResultList = mWifiManager.getScanResults();
         List<WifiFingerprint> result = new ArrayList<>();
-        for(ScanResult scanResult : scanResultList)
+        for(ScanResult scanResult : scanResultList) {
             result.add(new WifiFingerprint(scanResult.BSSID, (float) scanResult.level));
+        }
         return result;
     }
 

@@ -181,8 +181,9 @@ public class HttpUtils {
             String line;
             BufferedReader reader = new BufferedReader
                     (new InputStreamReader(conn.getInputStream(), "utf-8"));
-            while((line = reader.readLine()) != null)
+            while((line = reader.readLine()) != null) {
                 stringBuilder.append(line);
+            }
             String response = stringBuilder.toString();
             return JSONHelper.getSceneListResponse(response);
         } catch (IOException e) {

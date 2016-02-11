@@ -74,8 +74,7 @@ public class MapView extends ImageView {
                     return true;
                 }
             });
-        }
-        else {
+        } else {
             initData();
         }
     }
@@ -107,8 +106,7 @@ public class MapView extends ImageView {
         indicatorY = y;
         if(isUIThread) {
             invalidate();
-        }
-        else {
+        } else {
             postInvalidate();
         }
     }
@@ -181,12 +179,13 @@ public class MapView extends ImageView {
                     stopDrag();
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    if (mMode == MODE_ZOOM)
+                    if (mMode == MODE_ZOOM) {
                         setZoomMatrix(event);
-                    else if (mMode == MODE_DRAG)
+                    } else if (mMode == MODE_DRAG) {
                         setDragMatrix(event);
-                    else
+                    } else {
                         stopDrag();
+                    }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
                     mMode = MODE_ZOOM;
@@ -274,8 +273,7 @@ public class MapView extends ImageView {
             }
             if (values[Matrix.MTRANS_Y] + dy > 0) {
                 dy = -values[Matrix.MTRANS_Y];
-            }
-            else if
+            } else if
             (values[Matrix.MTRANS_Y] + dy < -(mImageHeight * values[Matrix.MSCALE_Y] - height)) {
                 dy = -(mImageHeight * values[Matrix.MSCALE_Y] - height) - values[Matrix.MTRANS_Y];
             }
@@ -315,8 +313,7 @@ public class MapView extends ImageView {
             }
             if (values[Matrix.MTRANS_X] + dx > 0) {
                 dx = -values[Matrix.MTRANS_X];
-            }
-            else if
+            } else if
             (values[Matrix.MTRANS_X] + dx < -(mImageWidth * values[Matrix.MSCALE_X] - width)) {
                 dx = -(mImageWidth * values[Matrix.MSCALE_X] - width) - values[Matrix.MTRANS_X];
             }
@@ -394,8 +391,7 @@ public class MapView extends ImageView {
             if (checkRest()) {
                 mCurrentMatrix.set(mMatrix);
                 setImageMatrix(mCurrentMatrix);
-            }
-            else {
+            } else {
                 //判断Y轴是否需要更正
                 float[] values = new float[9];
                 getImageMatrix().getValues(values);

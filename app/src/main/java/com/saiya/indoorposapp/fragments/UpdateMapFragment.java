@@ -109,8 +109,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         final float scale;
         if(scaleStr.length() != 0) {
             scale = Float.parseFloat(scaleStr);
-        }
-        else {
+        } else {
             scale = 0;
         }
         //读取图片文件到byte[]数组mapBytes
@@ -147,8 +146,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
                         Message msg = new Message();
                         msg.what = MainActivity.UPDATE_MAP_SUCCEED;
                         mActivity.getMyHandler().sendMessage(msg);
-                    }
-                    else {
+                    } else {
                         Message msg = new Message();
                         msg.what = MainActivity.NETWORK_ERROR;
                         mActivity.getMyHandler().sendMessage(msg);
@@ -196,15 +194,15 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
                         //获取图片的位置
                         edtTxt_updateMap_filePath.setText(c.getString(c.getColumnIndex("_data")));
                         c.close();
-                    }
-                    else
+                    } else {
                         Toast.makeText(mActivity, R.string.fragment_updateMap_chooseFileFailed, Toast.LENGTH_SHORT).show();
+                    }
                     break;
                 default:
                     break;
             }
-        }
-        else
+        } else {
             Toast.makeText(mActivity, R.string.fragment_updateMap_chooseFileFailed, Toast.LENGTH_SHORT).show();
+        }
     }
 }
