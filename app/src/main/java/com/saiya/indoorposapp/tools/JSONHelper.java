@@ -50,7 +50,8 @@ public class JSONHelper {
      * @param jsonResponse 服务器对获取地图列表请求的响应字符串
      * @return 返回存储SceneInfo对象的List,信息包含场景名称,场景比例尺的值,场景的上次更新时间
      */
-    public static List<SceneInfo> getSceneListResponse(String jsonResponse) throws UnauthorizedException {
+    public static List<SceneInfo> getSceneListResponse(String jsonResponse)
+    throws UnauthorizedException {
         if(jsonResponse.equals("{\"authorized\":false}")) {
             throw new UnauthorizedException();
         }
@@ -60,7 +61,8 @@ public class JSONHelper {
             JSONArray jsonArray = jsonObject.getJSONArray("maps");
             for(int i = 0; i < jsonArray.length(); ++i) {
                 JSONObject mapInfo = jsonArray.getJSONObject(i);
-                result.add(new SceneInfo(mapInfo.getString("sceneName"), (float) mapInfo.getDouble("scale"), mapInfo.getLong("lastUpdateTime")));
+                result.add(new SceneInfo(mapInfo.getString("sceneName"),
+                        (float) mapInfo.getDouble("scale"), mapInfo.getLong("lastUpdateTime")));
             }
             return result;
         } catch (JSONException e) {
