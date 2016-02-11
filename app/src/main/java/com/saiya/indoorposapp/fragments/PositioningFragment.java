@@ -154,8 +154,9 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         btn_positioning_switch.setOnClickListener(this);
         mSceneName = preferences.getLastSceneName();
         mMapScale = preferences.getLastSceneScale();
-        if(mSceneName != null && mMapScale != 0f)
+        if(mSceneName != null && mMapScale != 0f) {
             setMap();
+        }
     }
 
     /**
@@ -237,8 +238,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                 }
             }.execute();
         else
-            Toast.makeText(mActivity, R.string.fragment_positioning_positioningRunning, Toast
-                    .LENGTH_SHORT).show();
+            Toast.makeText(mActivity, R.string.fragment_positioning_positioningRunning, Toast.LENGTH_SHORT).show();
     }
     /**
      * 下载地图的异步任务
@@ -262,8 +262,9 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         protected Integer doInBackground(String... params) {
             try (FileOutputStream out = mActivity.openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE)){
                 mapBytes = HttpUtils.downloadMap(params[0]);
-                if(mapBytes == null)
+                if(mapBytes == null) {
                     return MainActivity.NETWORK_ERROR;
+                }
                 out.write(mapBytes);
                 out.flush();
             } catch (UnauthorizedException e) {

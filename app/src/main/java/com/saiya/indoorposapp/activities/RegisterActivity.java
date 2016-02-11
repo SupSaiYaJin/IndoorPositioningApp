@@ -47,8 +47,9 @@ public class RegisterActivity extends Activity implements View.OnClickListener{
         //处理注册时发回的消息
         @Override
         public void handleMessage(Message msg) {
-            if(mActivity.get() == null)
+            if(mActivity.get() == null) {
                 return;
+            }
             switch (msg.what) {
                 case REGISTER_SUCCEED:
                     Toast.makeText(mActivity.get(), R.string.activity_register_succeed, Toast.LENGTH_SHORT).show();

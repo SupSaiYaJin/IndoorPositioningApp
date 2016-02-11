@@ -53,23 +53,28 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         //处理登录时返回的消息
         @Override
         public void handleMessage(Message msg) {
-            if(mActivity.get() == null)
+            if(mActivity.get() == null) {
                 return;
+            }
             switch (msg.what) {
                 case LOGIN_SUCCEED:
                     Intent intent = new Intent(mActivity.get(), MainActivity.class);
-                    intent.putExtra("username", mActivity.get().activityPreferences.getString("lastusername", ""));
+                    intent.putExtra("username", mActivity.get()
+                            .activityPreferences.getString("lastusername", ""));
                     mActivity.get().startActivity(intent);
                     mActivity.get().finish();
                     break;
                 case USERNAME_NOT_EXIST:
-                    Toast.makeText(mActivity.get(), R.string.activity_login_invalidUsername, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.activity_login_invalidUsername,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 case PASSWORD_ERROR:
-                    Toast.makeText(mActivity.get(), R.string.activity_login_invalidPassword, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.activity_login_invalidPassword,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 case UNEXPECTED_ERROR:
-                    Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     break;
@@ -104,11 +109,15 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         String lastusername = activityPreferences.getString("lastusername", "");
         //若上次成功登录的用户名不为空,则得到那个用户的SharedPreferences
         if(!lastusername.equals("")) {
-            SharedPreferences preferences = getSharedPreferences(activityPreferences.getString("lastusername", "default") + "-settings", MODE_PRIVATE);
+            SharedPreferences preferences = getSharedPreferences
+                    (activityPreferences.getString("lastusername", "default") + "-settings",
+                    MODE_PRIVATE);
             edtTxt_login_username.setText(preferences.getString("username", ""));
             //查看用户是否开启了自动登录,若开启并且Activity不是由于未鉴权启动,则自动登录一次
-            if(preferences.getBoolean("autoLogin", false) && getIntent().getBooleanExtra("allowedAutoLogin", true))
+            if(preferences.getBoolean("autoLogin", false) &&
+                    getIntent().getBooleanExtra("allowedAutoLogin", true)) {
                 login(preferences.getString("username", ""), preferences.getString("password", ""));
+            }
         }
     }
 
@@ -123,7 +132,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_login_login:
-                login(edtTxt_login_username.getText().toString(), edtTxt_login_password.getText().toString());
+                login(edtTxt_login_username.getText().toString(),
+                        edtTxt_login_password.getText().toString());
                 break;
             case R.id.btn_login_register:
                 Intent intent = new Intent(this, RegisterActivity.class);

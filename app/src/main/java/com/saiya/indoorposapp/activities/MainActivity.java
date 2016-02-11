@@ -45,7 +45,8 @@ import java.util.List;
 /**
  * 主Activity,包含定位,更新指纹,更新地图,设置四个页面Fragment
  */
-public class MainActivity extends FragmentActivity implements OnPageChangeListener, OnClickListener, SensorEventListener{
+public class MainActivity extends FragmentActivity
+implements OnPageChangeListener, OnClickListener, SensorEventListener{
 
     /** 账户过期的消息代号 */
     public static final int UNAUTHORIZED = -1;
@@ -104,27 +105,29 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
         //处理更新指纹数据时返回的消息
         @Override
         public void handleMessage(Message msg) {
-            if(mActivity.get() == null)
+            if(mActivity.get() == null) {
                 return;
+            }
             switch (msg.what) {
                 case MainActivity.UNAUTHORIZED:
                     Intent intent = new Intent("com.saiya.indoorposapp.FORCE_OFFLINE");
                     mActivity.get().sendBroadcast(intent);
                     break;
                 case MainActivity.NETWORK_ERROR:
-                    Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 case MainActivity.UPDATE_FP_SUCCEED:
-                    Toast.makeText(mActivity.get(), R.string.fragment_updateFP_updateSucceed, Toast
-                            .LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.fragment_updateFP_updateSucceed,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 case MainActivity.UPDATE_MAP_SUCCEED:
-                    Toast.makeText(mActivity.get(), R.string.fragment_updateMap_updateSucceed, Toast
-                            .LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.fragment_updateMap_updateSucceed,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 case MainActivity.DOWNLOAD_MAP_SUCCEED:
-                    Toast.makeText(mActivity.get(), R.string.fragment_positioning_downloadMapSucceed, Toast
-                            .LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.fragment_positioning_downloadMapSucceed,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     break;
@@ -185,8 +188,9 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
         @Override
         protected void onPostExecute(String[] strings) {
             mProgressDialog.dismiss();
-            if(strings == null)
+            if(strings == null) {
                 return;
+            }
             DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
 
                 /** 记录被选择的单选项序号,初始化为-1,表示未选择 */
@@ -196,8 +200,10 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
                 public void onClick(DialogInterface dialog, int which) {
                     //若点确定按钮,做对应的操作
                     if(which == AlertDialog.BUTTON_POSITIVE) {
-                        if(mSelectedWhich != -1)
-                            onChooseScene(mSceneList.get(mSelectedWhich).getSceneName(), mSceneList.get(mSelectedWhich).getScale());
+                        if(mSelectedWhich != -1) {
+                            onChooseScene(mSceneList.get(mSelectedWhich).getSceneName(),
+                                    mSceneList.get(mSelectedWhich).getScale());
+                        }
                     }
                     //若点击单选项,仅改变mSelectedWhich的值
                     else
@@ -217,8 +223,7 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
@@ -242,10 +247,10 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     @Override
     protected void onResume() {
         super.onResume();
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor
-                .TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor
-                .TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mSensorManager
+                .getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mSensorManager
+                .getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_UI);
     }
 
     @Override
@@ -283,10 +288,10 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
 
     }
 
-    private void initTabIndicator()
-    {
+    private void initTabIndicator() {
         BottomTabView btv_main_positioning = (BottomTabView) findViewById(R.id.btv_main_positioning);
-        BottomTabView btn_main_undatefingerprint = (BottomTabView) findViewById(R.id.btv_main_updatefingerprint);
+        BottomTabView btn_main_undatefingerprint =
+                (BottomTabView) findViewById(R.id.btv_main_updatefingerprint);
         BottomTabView btv_main_updatemap = (BottomTabView) findViewById(R.id.btv_main_updatemap);
         BottomTabView btv_main_settings = (BottomTabView) findViewById(R.id.btv_main_settings);
 
@@ -304,18 +309,14 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     @Override
-    public void onPageSelected(int arg0)
-    {
+    public void onPageSelected(int arg0) {
 
     }
 
     @Override
-    public void onPageScrolled(int position, float positionOffset,
-                               int positionOffsetPixels)
-    {
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
-        if (positionOffset > 0)
-        {
+        if (positionOffset > 0) {
             BottomTabView left = mTabIndicator.get(position);
             BottomTabView right = mTabIndicator.get(position + 1);
             left.setIconAlpha(1 - positionOffset);
@@ -325,18 +326,15 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     @Override
-    public void onPageScrollStateChanged(int state)
-    {
+    public void onPageScrollStateChanged(int state) {
 
     }
 
     /**
      * 重置其他的Tab
      */
-    private void resetOtherTabs()
-    {
-        for (int i = 0; i < mTabIndicator.size(); i++)
-        {
+    private void resetOtherTabs() {
+        for (int i = 0; i < mTabIndicator.size(); i++) {
             mTabIndicator.get(i).setIconAlpha(0);
         }
     }
@@ -379,12 +377,10 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     @Override
-    public void onClick(View v)
-    {
+    public void onClick(View v) {
 
         resetOtherTabs();
-        switch (v.getId())
-        {
+        switch (v.getId()) {
             case R.id.btv_main_positioning:
                 mTabIndicator.get(0).setIconAlpha(1.0f);
                 vp_main_pager.setCurrentItem(0, false);

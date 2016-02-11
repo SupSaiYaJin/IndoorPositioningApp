@@ -75,8 +75,9 @@ public class MapView extends ImageView {
                 }
             });
         }
-        else
+        else {
             initData();
+        }
     }
 
     private void initData() {
@@ -104,10 +105,12 @@ public class MapView extends ImageView {
     public void setIndicator(float x, float y, boolean isUIThread) {
         indicatorX = x;
         indicatorY = y;
-        if(isUIThread)
+        if(isUIThread) {
             invalidate();
-        else
+        }
+        else {
             postInvalidate();
+        }
     }
 
     @Override
@@ -117,10 +120,12 @@ public class MapView extends ImageView {
         float values[] = new float[9];
         mCurrentMatrix.getValues(values);
         float currentScale = values[Matrix.MSCALE_X];
-        float scaledIndicatorLeft = indicatorX * mapScale * currentScale + values[Matrix.MTRANS_X]
-                - 32;
-        float scaledIndicatorTop = indicatorY * mapScale * currentScale + values[Matrix.MTRANS_Y] - 32;
-        mIndicatorRect.set(scaledIndicatorLeft, scaledIndicatorTop, scaledIndicatorLeft + 64, scaledIndicatorTop + 64);
+        float scaledIndicatorLeft =
+                indicatorX * mapScale * currentScale + values[Matrix.MTRANS_X] - 32;
+        float scaledIndicatorTop =
+                indicatorY * mapScale * currentScale + values[Matrix.MTRANS_Y] - 32;
+        mIndicatorRect.set(scaledIndicatorLeft, scaledIndicatorTop,
+                scaledIndicatorLeft + 64, scaledIndicatorTop + 64);
         canvas.drawBitmap(mIndicatorBitmap, null, mIndicatorRect, null);
     }
 
@@ -199,8 +204,9 @@ public class MapView extends ImageView {
          * 子控件开始进入移动状态，令ViewPager无法拦截对子控件的Touch事件
          */
         private void startDrag() {
-            if (moveListener != null)
+            if (moveListener != null) {
                 moveListener.startDrag();
+            }
 
         }
 
@@ -208,8 +214,9 @@ public class MapView extends ImageView {
          * 子控件开始停止移动状态，ViewPager将拦截对子控件的Touch事件
          */
         private void stopDrag() {
-            if (moveListener != null)
+            if (moveListener != null) {
                 moveListener.stopDrag();
+            }
         }
 
         /**
@@ -222,8 +229,9 @@ public class MapView extends ImageView {
             float[] values = new float[9];
             getImageMatrix().getValues(values);
             //图片左边缘离开左边界，表示不可右移
-            if (values[Matrix.MTRANS_X] >= 0)
+            if (values[Matrix.MTRANS_X] >= 0) {
                 mRightDragable = false;
+            }
             //图片右边缘离开右边界，表示不可左移
             if (values[Matrix.MTRANS_X] <= getWidth() - mImageWidth * values[Matrix.MSCALE_X]) {
                 mLeftDragable = false;
@@ -261,12 +269,16 @@ public class MapView extends ImageView {
          */
         private float checkDyBound(float[] values, float dy) {
             float height = getHeight();
-            if (mImageHeight * values[Matrix.MSCALE_Y] < height)
+            if (mImageHeight * values[Matrix.MSCALE_Y] < height) {
                 return 0;
-            if (values[Matrix.MTRANS_Y] + dy > 0)
+            }
+            if (values[Matrix.MTRANS_Y] + dy > 0) {
                 dy = -values[Matrix.MTRANS_Y];
-            else if (values[Matrix.MTRANS_Y] + dy < -(mImageHeight * values[Matrix.MSCALE_Y] - height))
+            }
+            else if
+            (values[Matrix.MTRANS_Y] + dy < -(mImageHeight * values[Matrix.MSCALE_Y] - height)) {
                 dy = -(mImageHeight * values[Matrix.MSCALE_Y] - height) - values[Matrix.MTRANS_Y];
+            }
             return dy;
         }
 
@@ -295,14 +307,17 @@ public class MapView extends ImageView {
             }
             mLeftDragable = true;
             mRightDragable = true;
-            if (mFirstMove) mFirstMove = false;
+            if (mFirstMove) {
+                mFirstMove = false;
+            }
             if (mImageWidth * values[Matrix.MSCALE_X] < width) {
                 return 0;
-
             }
             if (values[Matrix.MTRANS_X] + dx > 0) {
                 dx = -values[Matrix.MTRANS_X];
-            } else if (values[Matrix.MTRANS_X] + dx < -(mImageWidth * values[Matrix.MSCALE_X] - width)) {
+            }
+            else if
+            (values[Matrix.MTRANS_X] + dx < -(mImageWidth * values[Matrix.MSCALE_X] - width)) {
                 dx = -(mImageWidth * values[Matrix.MSCALE_X] - width) - values[Matrix.MTRANS_X];
             }
             return dx;
@@ -315,7 +330,9 @@ public class MapView extends ImageView {
          */
         private void setZoomMatrix(MotionEvent event) {
             //只有同时触屏两个点的时候才执行
-            if (event.getPointerCount() < 2) return;
+            if (event.getPointerCount() < 2) {
+                return;
+            }
             float endDis = distance(event);// 结束距离
             if (endDis > 10f) { // 两个手指并拢在一起的时候像素大于10
                 float scale = endDis / mStartDis;// 得到缩放倍数
@@ -345,11 +362,14 @@ public class MapView extends ImageView {
             float cx = getWidth() / 2;
             float cy = getHeight() / 2;
             //以ImageView中心点为缩放中心，判断缩放后的图片左边缘是否会离开ImageView左边缘，是的话以左边缘为X轴中心
-            if ((getWidth() / 2 - values[Matrix.MTRANS_X]) * scale < getWidth() / 2)
+            if ((getWidth() / 2 - values[Matrix.MTRANS_X]) * scale < getWidth() / 2) {
                 cx = 0;
+            }
             //判断缩放后的右边缘是否会离开ImageView右边缘，是的话以右边缘为X轴中心
-            if ((mImageWidth * values[Matrix.MSCALE_X] + values[Matrix.MTRANS_X]) * scale < getWidth())
+            if
+            ((mImageWidth * values[Matrix.MSCALE_X] + values[Matrix.MTRANS_X]) * scale < getWidth()) {
                 cx = getWidth();
+            }
             return new PointF(cx, cy);
         }
 
@@ -361,8 +381,9 @@ public class MapView extends ImageView {
          * @return 优化后的scale
          */
         private float checkMaxScale(float scale, float[] values) {
-            if (scale * values[Matrix.MSCALE_X] > mMaxScale)
+            if (scale * values[Matrix.MSCALE_X] > mMaxScale) {
                 scale = mMaxScale / values[Matrix.MSCALE_X];
+            }
             return scale;
         }
 
@@ -373,7 +394,8 @@ public class MapView extends ImageView {
             if (checkRest()) {
                 mCurrentMatrix.set(mMatrix);
                 setImageMatrix(mCurrentMatrix);
-            } else {
+            }
+            else {
                 //判断Y轴是否需要更正
                 float[] values = new float[9];
                 getImageMatrix().getValues(values);

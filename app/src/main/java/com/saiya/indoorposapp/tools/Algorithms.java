@@ -19,16 +19,20 @@ public class Algorithms {
      */
     public static void findKStrongestRSSI(List<WifiFingerprint> rssiList, int start, int
             end, int K) {
-        if(end - start + 1 < K)
+        if(end - start + 1 < K) {
             return;
+        }
         if(start < end) {
             int mid = partition(rssiList, start, end);
-            if(mid - start + 1 == K)
+            if(mid - start + 1 == K) {
                 return;
-            if(mid - start + 1 > K)
+            }
+            if(mid - start + 1 > K) {
                 findKStrongestRSSI(rssiList, start, mid - 1, K);
-            else
+            }
+            else {
                 findKStrongestRSSI(rssiList, mid + 1, end, K - (mid - start + 1));
+            }
         }
     }
 

@@ -29,6 +29,8 @@ public class HttpUtils {
     private static final String REGISTER_PATH = "/register";
     /** 登录请求的服务器路径 */
     private static final String LOGIN_PATH = "/login";
+    /** 注销请求的服务器路径 */
+    private static final String LOGOUT_PATH = "/logout";
     /** 获取场景列表的服务器路径 */
     private static final String GET_SCENE_LIST_PATH = "/positioning/getscenelist";
     /** 下载场景地图的服务器路径 */
@@ -83,8 +85,9 @@ public class HttpUtils {
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             conn.setRequestProperty("Content-Length", String.valueOf(content.length));
             //发起请求的路径属于/positioning时,在头中加上JSESSIONID的Cookie,保证权限,JSESSIONID在登录时获得
-            if(JSESSIONID != null && path.startsWith("/positioning"))
+            if(JSESSIONID != null && path.startsWith("/positioning")) {
                 conn.setRequestProperty("Cookie", String.format("JSESSIONID=%s", JSESSIONID));
+            }
             //获取输出流并输出内容体
             BufferedOutputStream out = new BufferedOutputStream(conn.getOutputStream());
             out.write(content);
@@ -100,7 +103,8 @@ public class HttpUtils {
             //读取响应,并转化为字符串返回
             StringBuilder stringBuilder = new StringBuilder();
             String line;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+            BufferedReader reader = new BufferedReader
+                    (new InputStreamReader(conn.getInputStream(), "utf-8"));
             while((line = reader.readLine()) != null)
                 stringBuilder.append(line);
             long responseTime = System.currentTimeMillis();
@@ -139,6 +143,26 @@ public class HttpUtils {
     }
 
     /**
+     * 向服务器发起注销请求
+     */
+    public static void logout() {
+
+         try {
+            URL url = new URL(SERVER_URL + LOGOUT_PATH);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            //设置请求方式为GET,并设置JSESSIONID
+            conn.setConnectTimeout(CONNECTION_TIMEOUT);
+            conn.setReadTimeout(CONNECTION_TIMEOUT);
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Cookie", String.format("JSESSIONID=%s", JSESSIONID));
+            conn.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
      * 向服务器发起获取场景列表的请求,因不用更新服务器数据,故使用Get方法
      * @return 返回Map,String为场景名,Long为对应场景的最后更新时间
      */
@@ -155,7 +179,8 @@ public class HttpUtils {
             //读取响应
             StringBuilder stringBuilder = new StringBuilder();
             String line;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+            BufferedReader reader = new BufferedReader
+                    (new InputStreamReader(conn.getInputStream(), "utf-8"));
             while((line = reader.readLine()) != null)
                 stringBuilder.append(line);
             String response = stringBuilder.toString();
@@ -173,7 +198,8 @@ public class HttpUtils {
      * @param rssi 采集到的RSSI值,形式为rssi1,rssi2,...,rssiN
      * @return 返回float[],float[0]为X坐标值,float[1]为Y坐标值
      */
-    public static float[] locateOnWifi(String sceneName, String mac, String rssi) throws UnauthorizedException {
+    public static float[] locateOnWifi(String sceneName, String mac, String rssi)
+    throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("sceneName", sceneName);
         requestPropertyMap.put("locateType", "1");
@@ -189,7 +215,8 @@ public class HttpUtils {
      * @param geomagnetic_z 采集到的Z方向磁场强度
      * @return 返回float[],float[0]为X坐标值,float[1]为Y坐标值
      */
-    public static float[] locateOnGeomagnetic(String sceneName, float geomagnetic_y, float geomagnetic_z) throws UnauthorizedException {
+    public static float[] locateOnGeomagnetic
+    (String sceneName, float geomagnetic_y, float geomagnetic_z) throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("sceneName", sceneName);
         requestPropertyMap.put("locateType", "2");
@@ -207,8 +234,9 @@ public class HttpUtils {
      * @param geomagnetic_z 采集到的Z方向磁场强度
      * @return 返回float[],float[0]为X坐标值,float[1]为Y坐标值
      */
-    public static float[] locateOnBoth(String sceneName, String mac, String rssi, float geomagnetic_y, float
-            geomagnetic_z) throws UnauthorizedException {
+    public static float[] locateOnBoth
+    (String sceneName, String mac, String rssi, float geomagnetic_y, float geomagnetic_z)
+    throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("sceneName", sceneName);
         requestPropertyMap.put("locateType", "0");
@@ -228,8 +256,9 @@ public class HttpUtils {
      * @param rssi 采集到的RSSI值,形式为rssi1,rssi2,...,rssiN
      * @return 返回true表示更新成功,false表示更新失败
      */
-    public static boolean updateWifiFingerprint(String sceneName, float location_x, float location_y, String mac,
-                                                String rssi) throws UnauthorizedException {
+    public static boolean updateWifiFingerprint
+    (String sceneName, float location_x, float location_y, String mac, String rssi)
+    throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("updateType", "wifi");
         requestPropertyMap.put("sceneName", sceneName);
@@ -249,8 +278,9 @@ public class HttpUtils {
      * @param geomagnetic_z 采集到的Z方向磁场强度
      * @return 返回true表示更新成功,false表示更新失败
      */
-    public static boolean updateGeomagneticFingerprint(String sceneName, float location_x, float location_y, float
-            geomagnetic_y, float geomagnetic_z) throws UnauthorizedException {
+    public static boolean updateGeomagneticFingerprint
+    (String sceneName, float location_x, float location_y, float geomagnetic_y, float geomagnetic_z)
+    throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("updateType", "geomagnetic");
         requestPropertyMap.put("sceneName", sceneName);
@@ -283,11 +313,13 @@ public class HttpUtils {
             byte buffer[] = new byte[1024];
             InputStream in = conn.getInputStream();
             int n;
-            while((n = in.read(buffer)) != -1)
+            while((n = in.read(buffer)) != -1) {
                 out.write(buffer, 0, n);
+            }
             byte[] map = out.toByteArray();
-            if(map.length == 20)
+            if(map.length == 20) {
                 throw new UnauthorizedException();
+            }
             return map;
         } catch (IOException e) {
             e.printStackTrace();
@@ -302,7 +334,8 @@ public class HttpUtils {
      * @param mapBytes 要上传的地图文件的字节数组
      * @return 返回true代表上传成功,false代表上传失败
      */
-    public static boolean uploadMap(String sceneName, float scale, byte[] mapBytes) throws UnauthorizedException {
+    public static boolean uploadMap(String sceneName, float scale, byte[] mapBytes)
+    throws UnauthorizedException {
         /** 边界标识,随机生成 */
         String BOUNDARY =  UUID.randomUUID().toString();
         String PREFIX = "--";
@@ -320,11 +353,12 @@ public class HttpUtils {
             conn.setRequestProperty("sceneName", URLEncoder.encode(sceneName, "utf-8"));
             conn.setRequestProperty("scale", Float.toString(scale));
             BufferedOutputStream out = new BufferedOutputStream(conn.getOutputStream());
-            /**
-             * name里面的值为服务器端的partName
-             * filename是文件的名字，包含后缀名
-             */
-            out.write((PREFIX + BOUNDARY + LINE_END + "Content-Disposition: form-data; name=\"sceneMap\"; filename=\"" + sceneName + ".jpg" + "\"" + LINE_END + "Content-Type: application/octet-stream; charset=" + "utf-8" + LINE_END + LINE_END).getBytes());
+            //name里面的值为服务器端的partName,filename是文件的名字，包含后缀名
+            out.write((PREFIX + BOUNDARY + LINE_END +
+                    "Content-Disposition: form-data; name=\"sceneMap\"; filename=\"" +
+                    sceneName + ".jpg" + "\"" + LINE_END +
+                    "Content-Type: application/octet-stream; charset=" +
+                    "utf-8" + LINE_END + LINE_END).getBytes());
             //发送字节数组
             out.write(mapBytes);
             out.write(LINE_END.getBytes());
@@ -333,9 +367,11 @@ public class HttpUtils {
             //读取响应
             StringBuilder response = new StringBuilder();
             String line;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
-            while((line = reader.readLine()) != null)
+            BufferedReader reader = new BufferedReader
+                    (new InputStreamReader(conn.getInputStream(), "utf-8"));
+            while((line = reader.readLine()) != null) {
                 response.append(line);
+            }
             return JSONHelper.getUploadMapResponse(response.toString());
         } catch (IOException e) {
             e.printStackTrace();

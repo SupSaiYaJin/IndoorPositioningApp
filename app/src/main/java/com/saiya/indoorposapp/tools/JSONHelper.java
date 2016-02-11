@@ -51,8 +51,9 @@ public class JSONHelper {
      * @return 返回存储SceneInfo对象的List,信息包含场景名称,场景比例尺的值,场景的上次更新时间
      */
     public static List<SceneInfo> getSceneListResponse(String jsonResponse) throws UnauthorizedException {
-        if(jsonResponse.equals("{\"authorized\":false}"))
+        if(jsonResponse.equals("{\"authorized\":false}")) {
             throw new UnauthorizedException();
+        }
         List<SceneInfo> result = new ArrayList<>();
         try {
             JSONObject jsonObject = new JSONObject(jsonResponse);
@@ -74,8 +75,9 @@ public class JSONHelper {
      * @return 返回float[],float[0]为X坐标值,float[1]为Y坐标值
      */
     public static float[] getLocateResponse(String jsonResponse) throws UnauthorizedException {
-        if(jsonResponse.equals("{\"authorized\":false}"))
+        if(jsonResponse.equals("{\"authorized\":false}")) {
             throw new UnauthorizedException();
+        }
         float[] result = new float[]{-1, -1};
         try {
             JSONObject jsonObject = new JSONObject(jsonResponse);
@@ -94,8 +96,9 @@ public class JSONHelper {
      * @return 返回true为更新成功,false为更新失败
      */
     public static boolean getUpdateResponse(String jsonResponse) throws UnauthorizedException {
-        if(jsonResponse.equals("{\"authorized\":false}"))
+        if(jsonResponse.equals("{\"authorized\":false}")) {
             throw new UnauthorizedException();
+        }
         try {
             JSONObject jsonObject = new JSONObject(jsonResponse);
             return jsonObject.getBoolean("updateSucceed");
@@ -111,8 +114,9 @@ public class JSONHelper {
      * @return 返回true为上传成功,false为上传失败
      */
     public static boolean getUploadMapResponse(String jsonResponse) throws UnauthorizedException {
-        if(jsonResponse.equals("{\"authorized\":false}"))
+        if(jsonResponse.equals("{\"authorized\":false}")) {
             throw new UnauthorizedException();
+        }
         try {
             JSONObject jsonObject = new JSONObject(jsonResponse);
             return jsonObject.getBoolean("uploadSucceed");

@@ -72,7 +72,8 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         edtTxt_updateFP_coorY = (EditText) mActivity.findViewById(R.id.edtTxt_updateFP_coorY);
         tv_updateFP_sceneName = (TextView) mActivity.findViewById(R.id.tv_updateFP_sceneName);
         Button btn_updateFingerprint_wifi = (Button) mActivity.findViewById(R.id.btn_updateFP_wifi);
-        Button btn_updateFingerprint_geomagnetic = (Button) mActivity.findViewById(R.id.btn_updateFP_geomagnetic);
+        Button btn_updateFingerprint_geomagnetic =
+                (Button) mActivity.findViewById(R.id.btn_updateFP_geomagnetic);
         tv_updateFP_sceneName.setOnClickListener(this);
         btn_updateFingerprint_wifi.setOnClickListener(this);
         btn_updateFingerprint_geomagnetic.setOnClickListener(this);
@@ -176,9 +177,11 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             List<WifiFingerprint> wifiScanResultAveraged = new ArrayList<>();
             //将WiFi扫描结果取平均
             for(Map.Entry<String, float[]> entry : wifiScanResultSum.entrySet())
-                wifiScanResultAveraged.add(new WifiFingerprint(entry.getKey(), entry.getValue()[0] / entry.getValue()[1]));
+                wifiScanResultAveraged.add(new WifiFingerprint
+                        (entry.getKey(), entry.getValue()[0] / entry.getValue()[1]));
             //将WiFi扫描结果的前N强的信息取出
-            Algorithms.findKStrongestRSSI(wifiScanResultAveraged, 0, wifiScanResultAveraged.size() - 1, NUMBER_OF_UPDATE_WIFIAP);
+            Algorithms.findKStrongestRSSI(wifiScanResultAveraged,
+                    0, wifiScanResultAveraged.size() - 1, NUMBER_OF_UPDATE_WIFIAP);
             //将WiFi扫描结果转为String以发送到服务器
             StringBuilder mac = new StringBuilder();
             StringBuilder rssi = new StringBuilder();
@@ -191,21 +194,25 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             //向服务器发送WiFi信息,结果由myHandler处理
             boolean updateResult;
             try {
-                updateResult = HttpUtils.updateWifiFingerprint(sceneName, params[0], params[1], mac.toString(), rssi.toString());
+                updateResult = HttpUtils.updateWifiFingerprint
+                        (sceneName, params[0], params[1], mac.toString(), rssi.toString());
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
                 return MainActivity.UNAUTHORIZED;
             }
-            if(updateResult)
+            if(updateResult) {
                 return MainActivity.UPDATE_FP_SUCCEED;
-            else
+            }
+            else {
                 return MainActivity.NETWORK_ERROR;
+            }
         }
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            if(values[0] == numberOfAcquision)
+            if(values[0] == numberOfAcquision) {
                 progressDialog.setMessage(getString(R.string.fragment_updateFP_updating));
+            }
             progressDialog.setProgress(values[0]);
         }
         @Override
@@ -266,16 +273,19 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                 e.printStackTrace();
                 return MainActivity.UNAUTHORIZED;
             }
-            if(updateResult)
+            if(updateResult) {
                 return MainActivity.UPDATE_FP_SUCCEED;
-            else
+            }
+            else {
                 return MainActivity.NETWORK_ERROR;
+            }
         }
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            if(values[0] == numberOfAcquision)
+            if(values[0] == numberOfAcquision) {
                 progressDialog.setMessage(getString(R.string.fragment_updateFP_updating));
+            }
             progressDialog.setProgress(values[0]);
         }
         @Override

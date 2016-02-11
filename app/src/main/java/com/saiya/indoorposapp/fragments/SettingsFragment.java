@@ -18,6 +18,7 @@ import android.widget.ToggleButton;
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.LoginActivity;
 import com.saiya.indoorposapp.activities.MainActivity;
+import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PreferencessHelper;
 
 import java.io.File;
@@ -25,8 +26,8 @@ import java.io.File;
 /**
  * 设置Fragment
  */
-public class SettingsFragment extends Fragment implements View.OnClickListener, CompoundButton
-        .OnCheckedChangeListener {
+public class SettingsFragment extends Fragment
+implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     
     /** 存储依附的MainActivity引用 */
     private MainActivity mActivity;
@@ -59,13 +60,20 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
     private void initView() {
         mActivity = (MainActivity)getActivity();
         //在布局中找到控件
-        ToggleButton tglBtn_settings_autoLogin = (ToggleButton) mActivity.findViewById(R.id.tglBtn_settings_autoLogin);
-        ToggleButton tglBtn_settings_autoUpdateMap = (ToggleButton) mActivity.findViewById(R.id.tglBtn_settings_autoUpdateMap);
-        TextView tv_settings_deleteMapCache = (TextView) mActivity.findViewById(R.id.tv_settings_deleteMapCache);
-        tv_settings_locationMethod = (TextView) mActivity.findViewById(R.id.tv_settings_locationMethod);
-        tv_settings_locationInterval = (TextView) mActivity.findViewById(R.id.tv_settings_locationInterval);
-        tv_settings_numberOfWifiAP = (TextView) mActivity.findViewById(R.id.tv_settings_numberOfWifiAP);
-        tv_settings_numberOfAcquisition = (TextView) mActivity.findViewById(R.id.tv_settings_numberOfAcquisition);
+        ToggleButton tglBtn_settings_autoLogin =
+                (ToggleButton) mActivity.findViewById(R.id.tglBtn_settings_autoLogin);
+        ToggleButton tglBtn_settings_autoUpdateMap =
+                (ToggleButton) mActivity.findViewById(R.id.tglBtn_settings_autoUpdateMap);
+        TextView tv_settings_deleteMapCache =
+                (TextView) mActivity.findViewById(R.id.tv_settings_deleteMapCache);
+        tv_settings_locationMethod =
+                (TextView) mActivity.findViewById(R.id.tv_settings_locationMethod);
+        tv_settings_locationInterval =
+                (TextView) mActivity.findViewById(R.id.tv_settings_locationInterval);
+        tv_settings_numberOfWifiAP =
+                (TextView) mActivity.findViewById(R.id.tv_settings_numberOfWifiAP);
+        tv_settings_numberOfAcquisition =
+                (TextView) mActivity.findViewById(R.id.tv_settings_numberOfAcquisition);
         Button btn_settings_logout = (Button) mActivity.findViewById(R.id.btn_settings_logout);
         //得到用户设置类对象
         preferences = mActivity.getPreferences();
@@ -151,8 +159,9 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
                     ((PositioningFragment) mActivity.getFragment(0)).setLocationMethod(mSelectedWhich);
                 }
                 //若点击单选项,仅改变mSelectedWhich的值
-                else
+                else {
                     mSelectedWhich = which;
+                }
             }
         };
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
@@ -203,27 +212,34 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
-                if (progress < 13)
+                if (progress < 13) {
                     seekBar.setProgress(0);
-                else if (progress >= 13 && progress < 38)
+                }
+                else if (progress >= 13 && progress < 38) {
                     seekBar.setProgress(25);
-                else if (progress >= 38 && progress < 63)
+                }
+                else if (progress >= 38 && progress < 63) {
                     seekBar.setProgress(50);
-                else if (progress >= 63 && progress < 88)
+                }
+                else if (progress >= 63 && progress < 88) {
                     seekBar.setProgress(75);
-                else
+                }
+                else {
                     seekBar.setProgress(100);
+                }
             }
         });
         //设置对话框的确定按钮
-        builder.setPositiveButton(R.string.fragment_settings_confirm, new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(R.string.fragment_settings_confirm,
+                new DialogInterface.OnClickListener() {
             //确定后将值存入SharedPrefernces,并且更新主界面TextView
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                int locationInterval = (skbar_dlg_locationInterval.getProgress() / 25 + 1) * LOCATION_INTERVAL_MIN;
+                int locationInterval =
+                        (skbar_dlg_locationInterval.getProgress() / 25 + 1) * LOCATION_INTERVAL_MIN;
                 preferences.setLocationInterval(locationInterval);
                 tv_settings_locationInterval.setText(String.valueOf(locationInterval));
-                ((PositioningFragment)  mActivity.getFragment(0)).setLocationInterval(locationInterval);
+                ((PositioningFragment) mActivity.getFragment(0)).setLocationInterval(locationInterval);
             }
         });
         builder.show();
@@ -248,16 +264,21 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
             //按移动SeekBar的情况更新TextView
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (progress < 13)
+                if (progress < 13) {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(6));
-                else if (progress >= 13 && progress < 38)
+                }
+                else if (progress >= 13 && progress < 38) {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(7));
-                else if (progress >= 38 && progress < 63)
+                }
+                else if (progress >= 38 && progress < 63) {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(8));
-                else if (progress >= 63 && progress < 88)
+                }
+                else if (progress >= 63 && progress < 88) {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(9));
-                else
+                }
+                else {
                     tv_dlg_numberOfWifiAP.setText(String.valueOf(10));
+                }
             }
 
             @Override
@@ -269,21 +290,26 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
-                if (progress < 13)
+                if (progress < 13) {
                     seekBar.setProgress(0);
-                else if (progress >= 13 && progress < 38)
+                }
+                else if (progress >= 13 && progress < 38) {
                     seekBar.setProgress(25);
-                else if (progress >= 38 && progress < 63)
+                }
+                else if (progress >= 38 && progress < 63) {
                     seekBar.setProgress(50);
-                else if (progress >= 63 && progress < 88)
+                }
+                else if (progress >= 63 && progress < 88) {
                     seekBar.setProgress(75);
-                else
+                }
+                else {
                     seekBar.setProgress(100);
+                }
             }
         });
         //设置对话框的确定按钮
-        builder.setPositiveButton(R.string.fragment_settings_confirm, new DialogInterface.OnClickListener
-                () {
+        builder.setPositiveButton(R.string.fragment_settings_confirm,
+                new DialogInterface.OnClickListener() {
             //确定后将值存入SharedPrefernces,并且更新主界面TextView
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -316,16 +342,21 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
             //按移动SeekBar的情况更新TextView
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (progress < 13)
+                if (progress < 13) {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN));
-                else if (progress >= 13 && progress < 38)
+                }
+                else if (progress >= 13 && progress < 38) {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 2));
-                else if (progress >= 38 && progress < 63)
+                }
+                else if (progress >= 38 && progress < 63) {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 3));
-                else if (progress >= 63 && progress < 88)
+                }
+                else if (progress >= 63 && progress < 88) {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 4));
-                else
+                }
+                else {
                     tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 5));
+                }
             }
 
             @Override
@@ -337,25 +368,31 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
-                if (progress < 13)
+                if (progress < 13) {
                     seekBar.setProgress(0);
-                else if (progress >= 13 && progress < 38)
+                }
+                else if (progress >= 13 && progress < 38) {
                     seekBar.setProgress(25);
-                else if (progress >= 38 && progress < 63)
+                }
+                else if (progress >= 38 && progress < 63) {
                     seekBar.setProgress(50);
-                else if (progress >= 63 && progress < 88)
+                }
+                else if (progress >= 63 && progress < 88) {
                     seekBar.setProgress(75);
-                else
+                }
+                else {
                     seekBar.setProgress(100);
+                }
             }
         });
         //设置对话框的确定按钮
-        builder.setPositiveButton(R.string.fragment_settings_confirm, new DialogInterface.OnClickListener
-                () {
+        builder.setPositiveButton(R.string.fragment_settings_confirm,
+                new DialogInterface.OnClickListener() {
             //确定后将值存入SharedPrefernces,并且更新主界面TextView
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                int numberOfAcquisition = (skbar_dlg_numberOfAcquisition.getProgress() / 25 + 1) * NUMBER_OF_ACQUISITION_MIN;
+                int numberOfAcquisition = (skbar_dlg_numberOfAcquisition.getProgress() / 25 + 1) *
+                        NUMBER_OF_ACQUISITION_MIN;
                 preferences.setNumberOfAcquisition(numberOfAcquisition);
                 tv_settings_numberOfAcquisition.setText(String.valueOf(numberOfAcquisition));
                 ((UpdateFPFragment)mActivity.getFragment(1)).setNumberOfAcquision(numberOfAcquisition);
@@ -374,6 +411,7 @@ public class SettingsFragment extends Fragment implements View.OnClickListener, 
         builder.setPositiveButton(R.string.fragment_settings_confirm, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                HttpUtils.logout();
                 Intent intent = new Intent(mActivity, LoginActivity.class);
                 intent.putExtra("allowedAutoLogin", false);
                 startActivity(intent);

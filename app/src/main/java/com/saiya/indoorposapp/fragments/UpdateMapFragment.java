@@ -54,11 +54,15 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
      */
     private void initView() {
         mActivity = (MainActivity)getActivity();
-        edtTxt_updateMap_sceneName = (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_sceneName);
+        edtTxt_updateMap_sceneName =
+                (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_sceneName);
         edtTxt_updateMap_scale = (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_scale);
-        edtTxt_updateMap_filePath = (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_filePath);
-        Button btn_updateMap_chooseSceneName = (Button) mActivity.findViewById(R.id.btn_updateMap_chooseSceneName);
-        Button btn_updateMap_chooseFile = (Button) mActivity.findViewById(R.id.btn_updateMap_chooseFile);
+        edtTxt_updateMap_filePath =
+                (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_filePath);
+        Button btn_updateMap_chooseSceneName =
+                (Button) mActivity.findViewById(R.id.btn_updateMap_chooseSceneName);
+        Button btn_updateMap_chooseFile =
+                (Button) mActivity.findViewById(R.id.btn_updateMap_chooseFile);
         Button btn_updateMap_confirm = (Button) mActivity.findViewById(R.id.btn_updateMap_confirm);
         btn_updateMap_chooseSceneName.setOnClickListener(this);
         btn_updateMap_chooseFile.setOnClickListener(this);
@@ -103,10 +107,12 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         }
         //将比例尺转为float
         final float scale;
-        if(scaleStr.length() != 0)
+        if(scaleStr.length() != 0) {
             scale = Float.parseFloat(scaleStr);
-        else
+        }
+        else {
             scale = 0;
+        }
         //读取图片文件到byte[]数组mapBytes
         File file = new File(filePath);
         final byte[] mapBytes;
