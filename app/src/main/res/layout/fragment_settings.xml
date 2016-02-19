@@ -206,7 +206,7 @@
                     android:text="@string/fragment_settings_numberOfWifiAP"/>
 
                 <TextView
-                    android:id="@+id/tv_settings_numberOfWifiAP"
+                    android:id="@+id/tv_settings_numberOfWifiAp"
                     android:clickable="true"
                     android:layout_width="120dp"
                     android:layout_height="wrap_content"

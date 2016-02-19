@@ -74,13 +74,15 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                     try {
                         switch (mLocationMethod) {
                             case USE_ALL_METHOD:
-                                result = HttpUtils.locateOnBoth(mSceneName, mac, rssi, MagneticRSS[0], MagneticRSS[1]);
+                                result = HttpUtils.locateOnBoth(mSceneName, mac, rssi,
+                                        MagneticRSS[0], MagneticRSS[1]);
                                 break;
                             case USE_WIFI_ONLY:
                                 result = HttpUtils.locateOnWifi(mSceneName, mac, rssi);
                                 break;
                             case USE_GEOMAGNETIC_ONLY:
-                                result = HttpUtils.locateOnGeomagnetic(mSceneName, MagneticRSS[0], MagneticRSS[1]);
+                                result = HttpUtils.locateOnGeomagnetic(mSceneName,
+                                        MagneticRSS[0], MagneticRSS[1]);
                                 break;
                             default:
                                 break;
@@ -145,7 +147,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         preferences =  mActivity.getPreferences();
         mLocationMethod = preferences.getLocationMethod();
         mLocationInterval = preferences.getLocationInterval();
-        mNumberOfAP = preferences.getNumberOfWifiAP();
+        mNumberOfAP = preferences.getNumberOfWifiAp();
         Button btn_positioning_start = (Button) mActivity.findViewById(R.id.btn_positioning_start);
         Button btn_positioning_stop = (Button) mActivity.findViewById(R.id.btn_positioning_stop);
         Button btn_positioning_switch = (Button) mActivity.findViewById(R.id.btn_positioning_switch);
@@ -260,7 +262,8 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
 
         @Override
         protected Integer doInBackground(String... params) {
-            try (FileOutputStream out = mActivity.openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE)){
+            try (FileOutputStream out = mActivity
+                    .openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE)){
                 mapBytes = HttpUtils.downloadMap(params[0]);
                 if(mapBytes == null) {
                     return MainActivity.NETWORK_ERROR;

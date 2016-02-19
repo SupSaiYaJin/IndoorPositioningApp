@@ -89,8 +89,20 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         return myHandler;
     }
 
-    public Fragment getFragment(int which) {
-        return mTabs.get(which);
+    public PositioningFragment getPositioningFragment() {
+        return (PositioningFragment) mTabs.get(0);
+    }
+
+    public UpdateFPFragment getUpdateFPFragment() {
+        return (UpdateFPFragment) mTabs.get(1);
+    }
+
+    public UpdateMapFragment getUpdateMapFragment() {
+        return (UpdateMapFragment) mTabs.get(2);
+    }
+
+    public SettingsFragment getSettingsFragment() {
+        return (SettingsFragment) mTabs.get(3);
     }
 
     //用于在子线程更新UI的MyHandler类
@@ -405,7 +417,8 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
     /**
      * 获取信号强度最强的前n个WiFi信息
      * @param n 指定获取WiFi信息的最大个数,
-     * @return 返回Bundle,其中mac字段存储了MAC地址,rssi字段存储了RSSI数据,都为用逗号拼接的String.若WiFi未打开返回null.
+     * @return 返回Bundle,其中mac字段存储了MAC地址,rssi字段存储了RSSI数据,都是用逗号拼接的String.
+     * 若WiFi未打开返回null.
      */
     public String[] getWifiScanResult(int n) {
         if(mWifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {

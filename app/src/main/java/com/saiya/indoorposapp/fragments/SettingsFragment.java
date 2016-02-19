@@ -28,7 +28,7 @@ import java.io.File;
  */
 public class SettingsFragment extends Fragment
 implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
-    
+
     /** 存储依附的MainActivity引用 */
     private MainActivity mActivity;
     /** 最小定位间隔 */
@@ -40,8 +40,12 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
 
     private TextView tv_settings_locationMethod;
     private TextView tv_settings_locationInterval;
-    private TextView tv_settings_numberOfWifiAP;
+    private TextView tv_settings_numberOfWifiAp;
     private TextView tv_settings_numberOfAcquisition;
+
+    private AlertDialog locationIntervalDialog;
+    private AlertDialog numOfWifiApDialog;
+    private AlertDialog numOfAcquisitionDialog;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -70,8 +74,8 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                 (TextView) mActivity.findViewById(R.id.tv_settings_locationMethod);
         tv_settings_locationInterval =
                 (TextView) mActivity.findViewById(R.id.tv_settings_locationInterval);
-        tv_settings_numberOfWifiAP =
-                (TextView) mActivity.findViewById(R.id.tv_settings_numberOfWifiAP);
+        tv_settings_numberOfWifiAp =
+                (TextView) mActivity.findViewById(R.id.tv_settings_numberOfWifiAp);
         tv_settings_numberOfAcquisition =
                 (TextView) mActivity.findViewById(R.id.tv_settings_numberOfAcquisition);
         Button btn_settings_logout = (Button) mActivity.findViewById(R.id.btn_settings_logout);
@@ -97,18 +101,90 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
         }
         tv_settings_locationInterval.setText(String.valueOf(preferences.getLocationInterval()));
         tv_settings_numberOfAcquisition.setText(String.valueOf(preferences.getNumberOfAcquisition()));
-        tv_settings_numberOfWifiAP.setText(String.valueOf(preferences.getNumberOfWifiAP()));
+        tv_settings_numberOfWifiAp.setText(String.valueOf(preferences.getNumberOfWifiAp()));
         //设置控件监听器
         tglBtn_settings_autoLogin.setOnCheckedChangeListener(this);
         tglBtn_settings_autoUpdateMap.setOnCheckedChangeListener(this);
         tv_settings_deleteMapCache.setOnClickListener(this);
         tv_settings_locationMethod.setOnClickListener(this);
         tv_settings_locationInterval.setOnClickListener(this);
-        tv_settings_numberOfWifiAP.setOnClickListener(this);
+        tv_settings_numberOfWifiAp.setOnClickListener(this);
         tv_settings_numberOfAcquisition.setOnClickListener(this);
         btn_settings_logout.setOnClickListener(this);
     }
 
+    /**
+     * 封装对设置结果执行的操作
+     */
+    private interface OnConfirmListener {
+        void process(int index);
+    }
+    /**
+     * 创建进度条对话框的工厂方法
+     * @param title 对话框标题,为资源ID
+     * @param original 初始值
+     * @param values 可以调整的值的数组
+     * @param onConfirmListener 点击确定按钮后执行的动作
+     * @return 返回一个AlertDialog对象
+     */
+    private AlertDialog
+    createProgressDialog(int title, int original, final int[] values,
+                         final OnConfirmListener onConfirmListener) {
+        //由数组大小算出的最小进度单元
+        final float unit = 50 / (values.length - 1);
+        View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar, null);
+        final TextView tv_dlg_status = (TextView) view.findViewById(R.id.tv_dlg);
+        final SeekBar skbar_dlg = (SeekBar) view.findViewById(R.id.skbar_dlg);
+        //构造选择定位间隔的对话框,由一个SeekBar和一个TextView组成
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        builder.setTitle(title);
+        builder.setView(view);
+        //初始化SeekBar和TextView状态
+        skbar_dlg.setProgress((original / values[0] - 1) * (100 / (values.length - 1)));
+        tv_dlg_status.setText(String.valueOf(original));
+        //设置SeekBar监听器
+        skbar_dlg.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            //按移动SeekBar的情况更新TextView
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float bound = unit;
+                for (int value : values) {
+                    if (progress < bound) {
+                        tv_dlg_status.setText(String.valueOf(value));
+                        break;
+                    } else {
+                        bound += 2 * unit;
+                    }
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            //使SeekBar结束移动时只落在n分之x处
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int progress = seekBar.getProgress();
+                float bound = unit;
+                for(int i = 0; i < values.length; ++i) {
+                    if(progress < bound) {
+                        seekBar.setProgress((int) (2 * i * unit));
+                        break;
+                    } else {
+                        bound += 2 * unit;
+                    }
+                }
+            }
+        });
+        //设置对话框的确定按钮
+        builder.setPositiveButton(R.string.fragment_settings_confirm, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                onConfirmListener.process((int) (skbar_dlg.getProgress() / unit / 2));
+            }
+        });
+        return builder.create();
+    }
     /**
      * 点击删除地图缓存按钮进行的操作
      */
@@ -156,7 +232,7 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                             break;
                     }
                     preferences.setLocationMethod(mSelectedWhich);
-                    ((PositioningFragment) mActivity.getFragment(0)).setLocationMethod(mSelectedWhich);
+                    mActivity.getPositioningFragment().setLocationMethod(mSelectedWhich);
                 //若点击单选项,仅改变mSelectedWhich的值
                 } else {
                     mSelectedWhich = which;
@@ -174,214 +250,72 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
      * 点击定位间隔设置进行的操作
      */
     private void locationIntervalOnClick() {
-        View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar, null);
-        final TextView tv_dlg_locationInterval = (TextView) view.findViewById(R.id.tv_dlg);
-        final SeekBar skbar_dlg_locationInterval = (SeekBar) view.findViewById(R.id.skbar_dlg);
-        //构造选择定位间隔的对话框,由一个SeekBar和一个TextView组成
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(R.string.fragment_settings_locationInterval);
-        builder.setView(view);
-        //初始化SeekBar和TextView状态
-        skbar_dlg_locationInterval.setProgress((preferences.getLocationInterval() /
-                LOCATION_INTERVAL_MIN - 1) * 25);
-        tv_dlg_locationInterval.setText(String.valueOf(preferences.getLocationInterval()));
-        //设置SeekBar监听器
-        skbar_dlg_locationInterval.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            //按移动SeekBar的情况更新TextView
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (progress < 13) {
-                    tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN));
-                }
-                else if (progress >= 13 && progress < 38) {
-                    tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN * 2));
-                }
-                else if (progress >= 38 && progress < 63) {
-                    tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN * 3));
-                }
-                else if (progress >= 63 && progress < 88) {
-                    tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN * 4));
-                } else {
-                    tv_dlg_locationInterval.setText(String.valueOf(LOCATION_INTERVAL_MIN * 5));
-                }
+        if(locationIntervalDialog == null) {
+            final int[] values = new int[5];
+            for(int i = 0; i < values.length; ++i) {
+                values[i] = (i + 1) * LOCATION_INTERVAL_MIN;
             }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            //使SeekBar结束移动时只落在五分之X处,分别代表0,1,2,3,4
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                int progress = seekBar.getProgress();
-                if (progress < 13) {
-                    seekBar.setProgress(0);
-                } else if (progress >= 13 && progress < 38) {
-                    seekBar.setProgress(25);
-                } else if (progress >= 38 && progress < 63) {
-                    seekBar.setProgress(50);
-                } else if (progress >= 63 && progress < 88) {
-                    seekBar.setProgress(75);
-                } else {
-                    seekBar.setProgress(100);
-                }
-            }
-        });
-        //设置对话框的确定按钮
-        builder.setPositiveButton(R.string.fragment_settings_confirm,
-                new DialogInterface.OnClickListener() {
-            //确定后将值存入SharedPrefernces,并且更新主界面TextView
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                int locationInterval =
-                        (skbar_dlg_locationInterval.getProgress() / 25 + 1) * LOCATION_INTERVAL_MIN;
-                preferences.setLocationInterval(locationInterval);
-                tv_settings_locationInterval.setText(String.valueOf(locationInterval));
-                ((PositioningFragment) mActivity.getFragment(0)).setLocationInterval(locationInterval);
-            }
-        });
-        builder.show();
-
+            int locationInterval = preferences.getLocationInterval();
+            locationIntervalDialog = createProgressDialog(R.string.fragment_settings_locationInterval,
+                    locationInterval, values, new OnConfirmListener() {
+                        @Override
+                        public void process(int index) {
+                            preferences.setLocationInterval(values[index]);
+                            tv_settings_locationInterval.setText(String.valueOf(values[index]));
+                            mActivity.getPositioningFragment().setLocationInterval(values[index]);
+                        }
+                    });
+            locationIntervalDialog.show();
+        } else {
+            locationIntervalDialog.show();
+        }
     }
 
     /**
      * 点击使用AP个数设置进行的操作
      */
-    private void numberOfWifiAPOnClick() {
-        View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar, null);
-        final TextView tv_dlg_numberOfWifiAP = (TextView) view.findViewById(R.id.tv_dlg);
-        final SeekBar skbar_dlg_numberOfWifiAP = (SeekBar) view.findViewById(R.id.skbar_dlg);
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(R.string.fragment_settings_numberOfWifiAP);
-        builder.setView(view);
-        //初始化SeekBar和TextView状态
-        skbar_dlg_numberOfWifiAP.setProgress((preferences.getNumberOfWifiAP() - 6) * 25);
-        tv_dlg_numberOfWifiAP.setText(String.valueOf(preferences.getNumberOfWifiAP()));
-        //设置SeekBar监听器
-        skbar_dlg_numberOfWifiAP.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            //按移动SeekBar的情况更新TextView
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (progress < 13) {
-                    tv_dlg_numberOfWifiAP.setText(String.valueOf(6));
-                } else if (progress >= 13 && progress < 38) {
-                    tv_dlg_numberOfWifiAP.setText(String.valueOf(7));
-                } else if (progress >= 38 && progress < 63) {
-                    tv_dlg_numberOfWifiAP.setText(String.valueOf(8));
-                } else if (progress >= 63 && progress < 88) {
-                    tv_dlg_numberOfWifiAP.setText(String.valueOf(9));
-                } else {
-                    tv_dlg_numberOfWifiAP.setText(String.valueOf(10));
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            //使SeekBar结束移动时只落在五分之X处,分别代表0,1,2,3,4
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                int progress = seekBar.getProgress();
-                if (progress < 13) {
-                    seekBar.setProgress(0);
-                } else if (progress >= 13 && progress < 38) {
-                    seekBar.setProgress(25);
-                } else if (progress >= 38 && progress < 63) {
-                    seekBar.setProgress(50);
-                } else if (progress >= 63 && progress < 88) {
-                    seekBar.setProgress(75);
-                } else {
-                    seekBar.setProgress(100);
-                }
-            }
-        });
-        //设置对话框的确定按钮
-        builder.setPositiveButton(R.string.fragment_settings_confirm,
-                new DialogInterface.OnClickListener() {
-            //确定后将值存入SharedPrefernces,并且更新主界面TextView
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //得到SharedPreferences编辑器
-                int numberOfWifiAP = skbar_dlg_numberOfWifiAP.getProgress() / 25 + 6;
-                preferences.setNumberOfWifiAP(numberOfWifiAP);
-                tv_settings_numberOfWifiAP.setText(String.valueOf(numberOfWifiAP));
-                ((PositioningFragment)mActivity.getFragment(0)).setNumberOfAP(numberOfWifiAP);
-            }
-        });
-        builder.show();
+    private void numberOfWifiApOnClick() {
+        if(numOfWifiApDialog == null) {
+            final int[] values = new int[]{6, 7, 8, 9, 10};
+            int numberOfWifiAp = preferences.getNumberOfWifiAp();
+            numOfWifiApDialog = createProgressDialog(R.string.fragment_settings_numberOfWifiAP,
+                    numberOfWifiAp, values, new OnConfirmListener() {
+                        @Override
+                        public void process(int index) {
+                            preferences.setNumberOfWifiAp(values[index]);
+                            tv_settings_numberOfWifiAp.setText(String.valueOf(values[index]));
+                            mActivity.getPositioningFragment().setNumberOfAP(values[index]);
+                        }
+                    });
+            numOfWifiApDialog.show();
+        } else {
+            numOfWifiApDialog.show();
+        }
     }
 
     /**
      * 点击采集次数设置进行的操作
      */
     private void numberOfAcquisitionOnClick() {
-        View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar, null);
-        final TextView tv_dlg_numberOfAcquisition = (TextView) view.findViewById(R.id.tv_dlg);
-        final SeekBar skbar_dlg_numberOfAcquisition = (SeekBar) view.findViewById(R.id.skbar_dlg);
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(R.string.fragment_settings_numberOfAcquisition);
-        builder.setView(view);
-        //初始化SeekBar和TextView状态
-        skbar_dlg_numberOfAcquisition.setProgress((preferences.getNumberOfAcquisition() /
-                NUMBER_OF_ACQUISITION_MIN - 1) * 25);
-        tv_dlg_numberOfAcquisition.setText(String.valueOf(preferences.getNumberOfAcquisition()));
-        //设置SeekBar监听器
-        skbar_dlg_numberOfAcquisition.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            //按移动SeekBar的情况更新TextView
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (progress < 13) {
-                    tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN));
-                } else if (progress >= 13 && progress < 38) {
-                    tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 2));
-                } else if (progress >= 38 && progress < 63) {
-                    tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 3));
-                } else if (progress >= 63 && progress < 88) {
-                    tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 4));
-                } else {
-                    tv_dlg_numberOfAcquisition.setText(String.valueOf(NUMBER_OF_ACQUISITION_MIN * 5));
-                }
+        if(numOfAcquisitionDialog == null) {
+            final int[] values = new int[5];
+            for(int i = 0; i < values.length; ++i) {
+                values[i] = (i + 1) * NUMBER_OF_ACQUISITION_MIN;
             }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            //使SeekBar结束移动时只落在五分之X处,分别代表0,1,2,3,4
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                int progress = seekBar.getProgress();
-                if (progress < 13) {
-                    seekBar.setProgress(0);
-                } else if (progress >= 13 && progress < 38) {
-                    seekBar.setProgress(25);
-                } else if (progress >= 38 && progress < 63) {
-                    seekBar.setProgress(50);
-                } else if (progress >= 63 && progress < 88) {
-                    seekBar.setProgress(75);
-                } else {
-                    seekBar.setProgress(100);
-                }
-            }
-        });
-        //设置对话框的确定按钮
-        builder.setPositiveButton(R.string.fragment_settings_confirm,
-                new DialogInterface.OnClickListener() {
-            //确定后将值存入SharedPrefernces,并且更新主界面TextView
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                int numberOfAcquisition = (skbar_dlg_numberOfAcquisition.getProgress() / 25 + 1) *
-                        NUMBER_OF_ACQUISITION_MIN;
-                preferences.setNumberOfAcquisition(numberOfAcquisition);
-                tv_settings_numberOfAcquisition.setText(String.valueOf(numberOfAcquisition));
-                ((UpdateFPFragment)mActivity.getFragment(1)).setNumberOfAcquision(numberOfAcquisition);
-            }
-        });
-        builder.show();
+            int numberOfAquisition = preferences.getNumberOfAcquisition();
+            numOfAcquisitionDialog = createProgressDialog(R.string.fragment_settings_numberOfAcquisition, numberOfAquisition,
+                    values, new OnConfirmListener() {
+                        @Override
+                        public void process(int index) {
+                            preferences.setNumberOfAcquisition(values[index]);
+                            tv_settings_numberOfAcquisition.setText(String.valueOf(values[index]));
+                            mActivity.getUpdateFPFragment().setNumberOfAcquision(values[index]);
+                        }
+                    });
+            numOfAcquisitionDialog.show();
+        } else {
+            numOfAcquisitionDialog.show();
+        }
     }
 
     /**
@@ -418,8 +352,8 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
             case R.id.tv_settings_locationInterval:
                 locationIntervalOnClick();
                 break;
-            case R.id.tv_settings_numberOfWifiAP:
-                numberOfWifiAPOnClick();
+            case R.id.tv_settings_numberOfWifiAp:
+                numberOfWifiApOnClick();
                 break;
             case R.id.tv_settings_numberOfAcquisition:
                 numberOfAcquisitionOnClick();

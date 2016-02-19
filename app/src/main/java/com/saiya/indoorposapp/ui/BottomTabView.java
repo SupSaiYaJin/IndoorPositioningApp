@@ -55,13 +55,16 @@ public class BottomTabView extends View {
 
         // 获取xml中的属性
         TypedArray attributes = context.obtainStyledAttributes(attrs, R.styleable.BottomTabView);
-        BitmapDrawable drawable = (BitmapDrawable) attributes.getDrawable(R.styleable.BottomTabView_tab_icon);
+        BitmapDrawable drawable = (BitmapDrawable) attributes
+                .getDrawable(R.styleable.BottomTabView_tab_icon);
         if (drawable != null) {
             mIconBitmap = drawable.getBitmap();
         }
         mColor = attributes.getColor(R.styleable.BottomTabView_tab_color, 0xFF4293D6);
         mText = attributes.getString(R.styleable.BottomTabView_text);
-        int mTextSize = (int) attributes.getDimension(R.styleable.BottomTabView_text_size, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10, getResources().getDisplayMetrics()));
+        int mTextSize = (int) attributes.getDimension(R.styleable.BottomTabView_text_size,
+                (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 10,
+                        getResources().getDisplayMetrics()));
         attributes.recycle();
 
         //设置绘制文本的Paint

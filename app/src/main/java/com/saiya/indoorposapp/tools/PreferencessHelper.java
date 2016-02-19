@@ -146,17 +146,17 @@ public class PreferencessHelper {
      * 获取定位时上传到服务器的WiFi信息个数
      * @return 返回上传到服务器的WiFi信息个数
      */
-    public int getNumberOfWifiAP() {
-        return preferences.getInt("numberOfWifiAP", 6);
+    public int getNumberOfWifiAp() {
+        return preferences.getInt("numberOfWifiAp", 6);
     }
 
     /**
      * 设置定位时上传到服务器的WiFi信息个数
      * @param value 上传到服务器的WiFi信息个数
      */
-    public void setNumberOfWifiAP(int value) {
+    public void setNumberOfWifiAp(int value) {
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt("numberOfWifiAP", value);
+        editor.putInt("numberOfWifiAp", value);
         editor.apply();
     }
 }

@@ -267,7 +267,9 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             //向服务器发送地磁指纹信息,结果由myHandler处理
             boolean updateResult;
             try {
-            updateResult = HttpUtils.updateGeomagneticFingerprint(sceneName, params[0], params[1], geomagneticResult[0], geomagneticResult[1]);
+                updateResult = HttpUtils
+                        .updateGeomagneticFingerprint(sceneName, params[0], params[1],
+                                geomagneticResult[0], geomagneticResult[1]);
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
                 return MainActivity.UNAUTHORIZED;

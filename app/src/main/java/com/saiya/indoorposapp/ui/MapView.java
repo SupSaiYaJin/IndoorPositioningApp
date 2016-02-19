@@ -48,7 +48,8 @@ public class MapView extends ImageView {
         setOnTouchListener(mListener);
         //将缩放类型设置为CENTER_INSIDE，表示把图片居中显示,并且宽高最大值为控件宽高
         setScaleType(ScaleType.MATRIX);
-        mIndicatorBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.positioning_icon_indicator);
+        mIndicatorBitmap = BitmapFactory.decodeResource(getResources(),
+                R.drawable.positioning_icon_indicator);
     }
 
     public MapView(Context context) {
