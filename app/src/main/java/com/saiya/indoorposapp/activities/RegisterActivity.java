@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.tools.ActivityCollector;
+import com.saiya.indoorposapp.tools.AuthResponse;
 import com.saiya.indoorposapp.tools.HttpUtils;
 
 import java.lang.ref.WeakReference;
@@ -21,15 +22,6 @@ import java.lang.ref.WeakReference;
  * 用户注册Activity
  */
 public class RegisterActivity extends Activity implements View.OnClickListener{
-
-    /** 未知错误 */
-    public static final int UNEXPECTED_ERROR = -1;
-
-    /** 注册成功 */
-    public static final int REGISTER_SUCCEED = 3;
-
-    /** 用户名重复 */
-    public static final int DUPLICATE_USERNAME = 4;
 
     //声明控件
     private EditText edtTxt_register_username;
@@ -50,7 +42,7 @@ public class RegisterActivity extends Activity implements View.OnClickListener{
             if(mActivity.get() == null) {
                 return;
             }
-            switch (msg.what) {
+            switch ((AuthResponse) msg.obj) {
                 case REGISTER_SUCCEED:
                     Toast.makeText(mActivity.get(), R.string.activity_register_succeed, Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(mActivity.get(), LoginActivity.class);
@@ -62,6 +54,8 @@ public class RegisterActivity extends Activity implements View.OnClickListener{
                     break;
                 case UNEXPECTED_ERROR:
                     Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError, Toast.LENGTH_SHORT).show();
+                    break;
+                default:
                     break;
             }
         }
@@ -117,7 +111,7 @@ public class RegisterActivity extends Activity implements View.OnClickListener{
                     @Override
                     public void run() {
                         Message msg = new Message();
-                        msg.what = HttpUtils.register(username, password);
+                        msg.obj = HttpUtils.register(username, password);
                         myHandler.sendMessage(msg);
                         progressDialog.dismiss();
                     }

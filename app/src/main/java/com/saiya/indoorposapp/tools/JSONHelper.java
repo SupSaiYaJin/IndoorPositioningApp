@@ -20,14 +20,14 @@ public class JSONHelper {
      * @param jsonResponse 服务器对注册请求的响应字符串
      * @return 注册响应码
      */
-    public static int getRegisterResponse(String jsonResponse) {
+    public static AuthResponse getRegisterResponse(String jsonResponse) {
         try {
             JSONObject jsonObject = new JSONObject(jsonResponse);
-            return jsonObject.getInt("registerResult");
+            return AuthResponse.getInstance(jsonObject.getInt("registerResult"));
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return -1;
+        return AuthResponse.UNEXPECTED_ERROR;
     }
 
     /**
@@ -35,14 +35,14 @@ public class JSONHelper {
      * @param jsonResponse 服务器对登录请求的响应字符串
      * @return 登录响应码
      */
-    public static int getLoginResponse(String jsonResponse) {
+    public static AuthResponse getLoginResponse(String jsonResponse) {
         try {
             JSONObject jsonObject = new JSONObject(jsonResponse);
-            return jsonObject.getInt("loginResult");
+            return AuthResponse.getInstance(jsonObject.getInt("loginResult"));
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return -1;
+        return AuthResponse.UNEXPECTED_ERROR;
     }
 
     /**

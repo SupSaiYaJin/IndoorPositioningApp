@@ -19,6 +19,7 @@ import com.saiya.indoorposapp.bean.WifiFingerprint;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.Algorithms;
 import com.saiya.indoorposapp.tools.HttpUtils;
+import com.saiya.indoorposapp.tools.PositioningResponse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -129,7 +130,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
      * 更新WiFi指纹数据的异步任务类,需要提供当前地点的X，Y坐标
      */
 
-    private class UpdateWifiFPTask extends AsyncTask<Float, Integer, Integer> {
+    private class UpdateWifiFPTask extends AsyncTask<Float, Integer, PositioningResponse> {
         private ProgressDialog progressDialog;
 
         private String sceneName;
@@ -147,7 +148,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         }
 
         @Override
-        protected Integer doInBackground(Float... params) {
+        protected PositioningResponse doInBackground(Float... params) {
             /** 存储所有WiFi强度信息,String为MAC地址,float数组第一位为多次RSS值的和,第二位为扫描到的次数 */
             Map<String, float[]> wifiScanResultSum = new HashMap<>();
             //进行numberOfAcquision次采集,并更新进度条
@@ -198,12 +199,12 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                         (sceneName, params[0], params[1], mac.toString(), rssi.toString());
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
-                return MainActivity.UNAUTHORIZED;
+                return PositioningResponse.UNAUTHORIZED;
             }
             if(updateResult) {
-                return MainActivity.UPDATE_FP_SUCCEED;
+                return PositioningResponse.UPDATE_FP_SUCCEED;
             } else {
-                return MainActivity.NETWORK_ERROR;
+                return PositioningResponse.NETWORK_ERROR;
             }
         }
 
@@ -215,10 +216,10 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             progressDialog.setProgress(values[0]);
         }
         @Override
-        protected void onPostExecute(Integer integer) {
+        protected void onPostExecute(PositioningResponse response) {
             progressDialog.dismiss();
             Message msg = new Message();
-            msg.what = integer;
+            msg.obj = response;
             mActivity.getMyHandler().sendMessage(msg);
         }
 
@@ -227,7 +228,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
      * 更新地磁指纹的异步任务,需要提供当前地点的X,Y坐标
      */
 
-    private class UpdateGeoFPTask extends AsyncTask<Float, Integer, Integer> {
+    private class UpdateGeoFPTask extends AsyncTask<Float, Integer, PositioningResponse> {
         private ProgressDialog progressDialog;
         private String sceneName;
 
@@ -246,7 +247,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         }
 
         @Override
-        protected Integer doInBackground(Float... params) {
+        protected PositioningResponse doInBackground(Float... params) {
             //存放采集的地磁指纹信息
             final float[] geomagneticResult = new float[2];
             //进行numberOfAcquision次采集,并更新进度条
@@ -272,12 +273,12 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                                 geomagneticResult[0], geomagneticResult[1]);
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
-                return MainActivity.UNAUTHORIZED;
+                return PositioningResponse.UNAUTHORIZED;
             }
             if(updateResult) {
-                return MainActivity.UPDATE_FP_SUCCEED;
+                return PositioningResponse.UPDATE_FP_SUCCEED;
             } else {
-                return MainActivity.NETWORK_ERROR;
+                return PositioningResponse.NETWORK_ERROR;
             }
         }
 
@@ -289,10 +290,10 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             progressDialog.setProgress(values[0]);
         }
         @Override
-        protected void onPostExecute(Integer integer) {
+        protected void onPostExecute(PositioningResponse response) {
             progressDialog.dismiss();
             Message msg = new Message();
-            msg.what = integer;
+            msg.obj = response;
             mActivity.getMyHandler().sendMessage(msg);
         }
 

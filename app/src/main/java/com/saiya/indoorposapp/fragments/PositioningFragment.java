@@ -20,6 +20,7 @@ import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.MainActivity;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
+import com.saiya.indoorposapp.tools.PositioningResponse;
 import com.saiya.indoorposapp.tools.PreferencessHelper;
 import com.saiya.indoorposapp.ui.MapView;
 
@@ -68,6 +69,14 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                 @Override
                 public void run() {
                     String[] wifiData = mActivity.getWifiScanResult(mNumberOfAP);
+                    if(wifiData == null) {
+                        isRunning = false;
+                        mHandler.removeCallbacks(mLocateRunnable);
+                        Message msg = new Message();
+                        msg.obj = PositioningResponse.NETWORK_ERROR;
+                        mActivity.getMyHandler().sendMessage(msg);
+                        return;
+                    }
                     String mac = wifiData[0];
                     String rssi = wifiData[1];
                     float[] MagneticRSS = mActivity.getGeomagneticRSS();
@@ -92,14 +101,14 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                         isRunning = false;
                         mHandler.removeCallbacks(mLocateRunnable);
                         Message msg = new Message();
-                        msg.what = MainActivity.UNAUTHORIZED;
+                        msg.obj = PositioningResponse.UNAUTHORIZED;
                         mActivity.getMyHandler().sendMessage(msg);
                     }
                     if(result[0] == -1 || result[1] == -1) {
                         isRunning = false;
                         mHandler.removeCallbacks(mLocateRunnable);
                         Message msg = new Message();
-                        msg.what = MainActivity.NETWORK_ERROR;
+                        msg.obj = PositioningResponse.NETWORK_ERROR;
                         mActivity.getMyHandler().sendMessage(msg);
                     }
                     mv_positioning_map.setIndicator(result[0], result[1], false);
@@ -245,7 +254,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
     /**
      * 下载地图的异步任务
      */
-    private class DownloadMapTask extends AsyncTask<String, Void, Integer> {
+    private class DownloadMapTask extends AsyncTask<String, Void, PositioningResponse> {
 
         private ProgressDialog mProgressDialog;
         private byte[] mapBytes;
@@ -261,31 +270,31 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         }
 
         @Override
-        protected Integer doInBackground(String... params) {
+        protected PositioningResponse doInBackground(String... params) {
             try (FileOutputStream out = mActivity
                     .openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE)){
                 mapBytes = HttpUtils.downloadMap(params[0]);
                 if(mapBytes == null) {
-                    return MainActivity.NETWORK_ERROR;
+                    return PositioningResponse.NETWORK_ERROR;
                 }
                 out.write(mapBytes);
                 out.flush();
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
-                return MainActivity.UNAUTHORIZED;
+                return PositioningResponse.UNAUTHORIZED;
             } catch (IOException e) {
                 e.printStackTrace();
-                return MainActivity.NETWORK_ERROR;
+                return PositioningResponse.NETWORK_ERROR;
             }
-            return MainActivity.DOWNLOAD_MAP_SUCCEED;
+            return PositioningResponse.DOWNLOAD_MAP_SUCCEED;
         }
 
         @Override
-        protected void onPostExecute(Integer integer) {
+        protected void onPostExecute(PositioningResponse response) {
             mProgressDialog.dismiss();
             Message msg = new Message();
-            msg.what = integer;
-            if(integer == MainActivity.DOWNLOAD_MAP_SUCCEED) {
+            msg.obj = response;
+            if(response == PositioningResponse.DOWNLOAD_MAP_SUCCEED) {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
                 mv_positioning_map.setMap(bitmap, mMapScale);
             }

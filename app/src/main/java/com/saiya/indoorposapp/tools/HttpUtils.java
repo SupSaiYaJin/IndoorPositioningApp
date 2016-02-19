@@ -122,7 +122,7 @@ public class HttpUtils {
      * @param password 密码
      * @return 返回注册响应码
      */
-    public static int register(String username, String password) {
+    public static AuthResponse register(String username, String password) {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("username", username);
         requestPropertyMap.put("password", password);
@@ -135,7 +135,7 @@ public class HttpUtils {
      * @param password 密码
      * @return 返回登录响应码
      */
-    public static int login(String username, String password) {
+    public static AuthResponse login(String username, String password) {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("username", username);
         requestPropertyMap.put("password", password);

@@ -32,6 +32,7 @@ import com.saiya.indoorposapp.fragments.UpdateFPFragment;
 import com.saiya.indoorposapp.fragments.UpdateMapFragment;
 import com.saiya.indoorposapp.tools.ActivityCollector;
 import com.saiya.indoorposapp.tools.HttpUtils;
+import com.saiya.indoorposapp.tools.PositioningResponse;
 import com.saiya.indoorposapp.tools.PreferencessHelper;
 import com.saiya.indoorposapp.ui.BottomTabView;
 import com.saiya.indoorposapp.ui.MyViewPager;
@@ -40,6 +41,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -47,17 +49,6 @@ import java.util.List;
  */
 public class MainActivity extends FragmentActivity
 implements OnPageChangeListener, OnClickListener, SensorEventListener{
-
-    /** 账户过期的消息代号 */
-    public static final int UNAUTHORIZED = -1;
-    /** 网络错误的消息代号 */
-    public static final int NETWORK_ERROR = 0;
-    /** 更新指纹数据成功的消息代号 */
-    public static final int UPDATE_FP_SUCCEED = 1;
-    /** 更新地图成功的消息代号 */
-    public static final int UPDATE_MAP_SUCCEED = 2;
-    /** 下载地图成功的消息代号 */
-    public static final int DOWNLOAD_MAP_SUCCEED = 3;
 
     //用于显示Fragment
     private MyViewPager vp_main_pager;
@@ -120,24 +111,24 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
             if(mActivity.get() == null) {
                 return;
             }
-            switch (msg.what) {
-                case MainActivity.UNAUTHORIZED:
+            switch ((PositioningResponse) msg.obj) {
+                case UNAUTHORIZED:
                     Intent intent = new Intent("com.saiya.indoorposapp.FORCE_OFFLINE");
                     mActivity.get().sendBroadcast(intent);
                     break;
-                case MainActivity.NETWORK_ERROR:
+                case NETWORK_ERROR:
                     Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError,
                             Toast.LENGTH_SHORT).show();
                     break;
-                case MainActivity.UPDATE_FP_SUCCEED:
+                case UPDATE_FP_SUCCEED:
                     Toast.makeText(mActivity.get(), R.string.fragment_updateFP_updateSucceed,
                             Toast.LENGTH_SHORT).show();
                     break;
-                case MainActivity.UPDATE_MAP_SUCCEED:
+                case UPDATE_MAP_SUCCEED:
                     Toast.makeText(mActivity.get(), R.string.fragment_updateMap_updateSucceed,
                             Toast.LENGTH_SHORT).show();
                     break;
-                case MainActivity.DOWNLOAD_MAP_SUCCEED:
+                case DOWNLOAD_MAP_SUCCEED:
                     Toast.makeText(mActivity.get(), R.string.fragment_positioning_downloadMapSucceed,
                             Toast.LENGTH_SHORT).show();
                     break;
@@ -178,7 +169,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
                 mSceneList = HttpUtils.getSceneList();
                 if(mSceneList == null || mSceneList.size() == 0) {
                     Message msg = new Message();
-                    msg.what = NETWORK_ERROR;
+                    msg.obj = PositioningResponse.NETWORK_ERROR;
                     mActivity.getMyHandler().sendMessage(msg);
                 }
                 else {
@@ -191,7 +182,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
                 Message msg = new Message();
-                msg.what = UNAUTHORIZED;
+                msg.obj = PositioningResponse.UNAUTHORIZED;
                 mActivity.getMyHandler().sendMessage(msg);
             }
             return null;
@@ -414,6 +405,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
 
     }
 
+    private String[] wifiScanResultOfN = new String[2];
     /**
      * 获取信号强度最强的前n个WiFi信息
      * @param n 指定获取WiFi信息的最大个数,
@@ -421,8 +413,8 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
      * 若WiFi未打开返回null.
      */
     public String[] getWifiScanResult(int n) {
+        //若未开WiFi返回null
         if(mWifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-            Toast.makeText(this, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
             return null;
         }
         mWifiManager.startScan();
@@ -446,25 +438,28 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         }
         mac.deleteCharAt(mac.length() - 1);
         rssi.deleteCharAt(rssi.length() - 1);
-        return new String[]{mac.toString(), rssi.toString()};
+        wifiScanResultOfN[0] = mac.toString();
+        wifiScanResultOfN[1] = rssi.toString();
+        return wifiScanResultOfN;
     }
 
+    List<WifiFingerprint> allWifiScanResult = new LinkedList<>();
     /**
      * 获取所有WiFi信号信息,String为MAC地址,Float为信号强度
      * @return 返回存储了WiFi信号信息的Map
      */
     public List<WifiFingerprint> getWifiScanResult() {
+        allWifiScanResult.clear();
         if(mWifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
             Toast.makeText(this, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
             return null;
         }
         mWifiManager.startScan();
         List<ScanResult> scanResultList = mWifiManager.getScanResults();
-        List<WifiFingerprint> result = new ArrayList<>();
         for(ScanResult scanResult : scanResultList) {
-            result.add(new WifiFingerprint(scanResult.BSSID, (float) scanResult.level));
+            allWifiScanResult.add(new WifiFingerprint(scanResult.BSSID, (float) scanResult.level));
         }
-        return result;
+        return allWifiScanResult;
     }
 
     public float[] getGeomagneticRSS() {

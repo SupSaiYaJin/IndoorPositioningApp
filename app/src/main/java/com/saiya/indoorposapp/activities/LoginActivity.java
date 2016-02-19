@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.tools.ActivityCollector;
+import com.saiya.indoorposapp.tools.AuthResponse;
 import com.saiya.indoorposapp.tools.HttpUtils;
 
 import java.lang.ref.WeakReference;
@@ -22,18 +23,6 @@ import java.lang.ref.WeakReference;
  * 用户登录Activity
  */
 public class LoginActivity extends Activity implements View.OnClickListener {
-
-    /** 未知错误 */
-    public static final int UNEXPECTED_ERROR = -1;
-
-    /** 登录成功 */
-    public static final int LOGIN_SUCCEED = 0;
-
-    /** 用户名不存在 */
-    public static final int USERNAME_NOT_EXIST = 1;
-
-    /** 密码错误 */
-    public static final int PASSWORD_ERROR = 2;
 
     private SharedPreferences activityPreferences;
 
@@ -56,7 +45,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             if(mActivity.get() == null) {
                 return;
             }
-            switch (msg.what) {
+            switch ((AuthResponse) msg.obj) {
                 case LOGIN_SUCCEED:
                     Intent intent = new Intent(mActivity.get(), MainActivity.class);
                     intent.putExtra("username", mActivity.get()
@@ -168,8 +157,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             @Override
             public void run() {
                 Message msg = new Message();
-                int loginResult = HttpUtils.login(username, password);
-                if(loginResult == LOGIN_SUCCEED) {
+                AuthResponse loginResult = HttpUtils.login(username, password);
+                if(loginResult == AuthResponse.LOGIN_SUCCEED) {
                     SharedPreferences.Editor editor = activityPreferences.edit();
                     editor.putString("lastusername", username);
                     editor.apply();
@@ -178,7 +167,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                     editor.putString("password", password);
                     editor.apply();
                 }
-                msg.what = loginResult;
+                msg.obj = loginResult;
                 myHandler.sendMessage(msg);
                 progressDialog.dismiss();
             }

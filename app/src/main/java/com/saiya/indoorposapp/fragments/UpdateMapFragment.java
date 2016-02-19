@@ -21,6 +21,7 @@ import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.MainActivity;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
+import com.saiya.indoorposapp.tools.PositioningResponse;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -68,6 +69,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         btn_updateMap_chooseFile.setOnClickListener(this);
         btn_updateMap_confirm.setOnClickListener(this);
         edtTxt_updateMap_sceneName.setText(R.string.activity_main_defaultScene);
+        progressDialog = new ProgressDialog(mActivity);
     }
 
     /**
@@ -92,6 +94,8 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         startActivityForResult(intent, 1);
     }
 
+    //创建一个进度条对话框
+    private ProgressDialog progressDialog;
     /**
      * 点击上传地图后触发的事件
      */
@@ -129,8 +133,6 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
             Toast.makeText(mActivity, R.string.fragment_updateMap_streamFailed, Toast.LENGTH_SHORT).show();
             return;
         }
-        //创建一个进度条对话框
-        final ProgressDialog progressDialog = new ProgressDialog(mActivity);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.setMessage(getString(R.string.fragment_updateMap_updating));
         progressDialog.setCancelable(false);
@@ -144,17 +146,17 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
                     uploadResult = HttpUtils.uploadMap(sceneName, scale, mapBytes);
                     if(uploadResult) {
                         Message msg = new Message();
-                        msg.what = MainActivity.UPDATE_MAP_SUCCEED;
+                        msg.obj = PositioningResponse.UPDATE_MAP_SUCCEED;
                         mActivity.getMyHandler().sendMessage(msg);
                     } else {
                         Message msg = new Message();
-                        msg.what = MainActivity.NETWORK_ERROR;
+                        msg.obj = PositioningResponse.NETWORK_ERROR;
                         mActivity.getMyHandler().sendMessage(msg);
                     }
                 } catch (UnauthorizedException e) {
                     e.printStackTrace();
                     Message msg = new Message();
-                    msg.what = MainActivity.UNAUTHORIZED;
+                    msg.obj = PositioningResponse.UNAUTHORIZED;
                     mActivity.getMyHandler().sendMessage(msg);
                 } finally {
                     progressDialog.dismiss();
