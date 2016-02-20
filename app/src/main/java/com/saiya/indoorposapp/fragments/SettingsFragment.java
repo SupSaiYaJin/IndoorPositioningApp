@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -68,8 +69,10 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                 (ToggleButton) mActivity.findViewById(R.id.tglBtn_settings_autoLogin);
         ToggleButton tglBtn_settings_autoUpdateMap =
                 (ToggleButton) mActivity.findViewById(R.id.tglBtn_settings_autoUpdateMap);
+
         TextView tv_settings_deleteMapCache =
                 (TextView) mActivity.findViewById(R.id.tv_settings_deleteMapCache);
+
         tv_settings_locationMethod =
                 (TextView) mActivity.findViewById(R.id.tv_settings_locationMethod);
         tv_settings_locationInterval =
@@ -78,6 +81,16 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                 (TextView) mActivity.findViewById(R.id.tv_settings_numberOfWifiAp);
         tv_settings_numberOfAcquisition =
                 (TextView) mActivity.findViewById(R.id.tv_settings_numberOfAcquisition);
+
+        RelativeLayout rl_settings_locationMethod =
+                (RelativeLayout) mActivity.findViewById(R.id.rl_settings_locationMethod);
+        RelativeLayout rl_settings_locationInterval =
+                (RelativeLayout) mActivity.findViewById(R.id.rl_settings_locationInterval);
+        RelativeLayout rl_settings_numberOfWifiAp =
+                (RelativeLayout) mActivity.findViewById(R.id.rl_settings_numberOfWifiAp);
+        RelativeLayout rl_settings_numberOfAcquisition =
+                (RelativeLayout) mActivity.findViewById(R.id.rl_settings_numberOfAcquisition);
+
         Button btn_settings_logout = (Button) mActivity.findViewById(R.id.btn_settings_logout);
         //得到用户设置类对象
         preferences = mActivity.getPreferences();
@@ -106,10 +119,10 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
         tglBtn_settings_autoLogin.setOnCheckedChangeListener(this);
         tglBtn_settings_autoUpdateMap.setOnCheckedChangeListener(this);
         tv_settings_deleteMapCache.setOnClickListener(this);
-        tv_settings_locationMethod.setOnClickListener(this);
-        tv_settings_locationInterval.setOnClickListener(this);
-        tv_settings_numberOfWifiAp.setOnClickListener(this);
-        tv_settings_numberOfAcquisition.setOnClickListener(this);
+        rl_settings_locationMethod.setOnClickListener(this);
+        rl_settings_locationInterval.setOnClickListener(this);
+        rl_settings_numberOfWifiAp.setOnClickListener(this);
+        rl_settings_numberOfAcquisition.setOnClickListener(this);
         btn_settings_logout.setOnClickListener(this);
     }
 
@@ -132,7 +145,8 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
                          final OnConfirmListener onConfirmListener) {
         //由数组大小算出的最小进度单元
         final int unit = 50 / (values.length - 1);
-        View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar, null);
+        View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar,
+                (ViewGroup)mActivity.findViewById(R.id.sclVi_settings), false);
         final TextView tv_dlg_status = (TextView) view.findViewById(R.id.tv_dlg);
         final SeekBar skbar_dlg = (SeekBar) view.findViewById(R.id.skbar_dlg);
         //构造选择定位间隔的对话框,由一个SeekBar和一个TextView组成
@@ -349,16 +363,16 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
             case R.id.tv_settings_deleteMapCache:
                 deleteMapCacheOnClick();
                 break;
-            case R.id.tv_settings_locationMethod:
+            case R.id.rl_settings_locationMethod:
                 locationMethodOnClick();
                 break;
-            case R.id.tv_settings_locationInterval:
+            case R.id.rl_settings_locationInterval:
                 locationIntervalOnClick();
                 break;
-            case R.id.tv_settings_numberOfWifiAp:
+            case R.id.rl_settings_numberOfWifiAp:
                 numberOfWifiApOnClick();
                 break;
-            case R.id.tv_settings_numberOfAcquisition:
+            case R.id.rl_settings_numberOfAcquisition:
                 numberOfAcquisitionOnClick();
                 break;
             case R.id.btn_settings_logout:

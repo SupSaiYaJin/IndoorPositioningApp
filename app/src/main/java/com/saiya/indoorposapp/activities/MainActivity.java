@@ -88,14 +88,6 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         return (UpdateFPFragment) mTabs.get(1);
     }
 
-    public UpdateMapFragment getUpdateMapFragment() {
-        return (UpdateMapFragment) mTabs.get(2);
-    }
-
-    public SettingsFragment getSettingsFragment() {
-        return (SettingsFragment) mTabs.get(3);
-    }
-
     //用于在子线程更新UI的MyHandler类
     public static class MyHandler extends Handler {
 

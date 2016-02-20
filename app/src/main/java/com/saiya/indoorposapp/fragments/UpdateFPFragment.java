@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,32 +73,27 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         edtTxt_updateFP_coorX = (EditText) mActivity.findViewById(R.id.edtTxt_updateFP_coorX);
         edtTxt_updateFP_coorY = (EditText) mActivity.findViewById(R.id.edtTxt_updateFP_coorY);
         tv_updateFP_sceneName = (TextView) mActivity.findViewById(R.id.tv_updateFP_sceneName);
+        RelativeLayout rl_updateFP_sceneName =
+                (RelativeLayout) mActivity.findViewById(R.id.rl_updateFP_sceneName);
         Button btn_updateFingerprint_wifi = (Button) mActivity.findViewById(R.id.btn_updateFP_wifi);
         Button btn_updateFingerprint_geomagnetic =
                 (Button) mActivity.findViewById(R.id.btn_updateFP_geomagnetic);
-        tv_updateFP_sceneName.setOnClickListener(this);
+        rl_updateFP_sceneName.setOnClickListener(this);
         btn_updateFingerprint_wifi.setOnClickListener(this);
         btn_updateFingerprint_geomagnetic.setOnClickListener(this);
         tv_updateFP_sceneName.setText(R.string.activity_main_defaultScene);
         numberOfAcquision = mActivity.getPreferences().getNumberOfAcquisition();
     }
 
-    /**
-     * 点击选择场景名后触发的事件
-     */
-    private void chooseSceneOnClick() {
-        new MainActivity.ChooseSceneTask(mActivity) {
-            @Override
-            protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
-                tv_updateFP_sceneName.setText(sceneName);
-            }
-        }.execute();
-    }
-
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.tv_updateFP_sceneName) {
-            chooseSceneOnClick();
+        if(v.getId() == R.id.rl_updateFP_sceneName) {
+            new MainActivity.ChooseSceneTask(mActivity) {
+                @Override
+                protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
+                    tv_updateFP_sceneName.setText(sceneName);
+                }
+            }.execute();
             return;
         }
         float location_x;

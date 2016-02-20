@@ -5,5 +5,5 @@
         android:drawable="@color/bg_white" />
     <item
         android:state_pressed="true"
-        android:drawable="@color/common_grey" />
+        android:drawable="@color/light_grey" />
 </selector>
