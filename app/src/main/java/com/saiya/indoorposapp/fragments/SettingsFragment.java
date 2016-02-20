@@ -122,16 +122,16 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     /**
      * 创建进度条对话框的工厂方法
      * @param title 对话框标题,为资源ID
-     * @param original 初始值
+     * @param oriIndex 初始值索引
      * @param values 可以调整的值的数组
      * @param onConfirmListener 点击确定按钮后执行的动作
      * @return 返回一个AlertDialog对象
      */
     private AlertDialog
-    createProgressDialog(int title, int original, final int[] values,
+    createProgressDialog(int title, int oriIndex, final int[] values,
                          final OnConfirmListener onConfirmListener) {
         //由数组大小算出的最小进度单元
-        final float unit = 50 / (values.length - 1);
+        final int unit = 50 / (values.length - 1);
         View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar, null);
         final TextView tv_dlg_status = (TextView) view.findViewById(R.id.tv_dlg);
         final SeekBar skbar_dlg = (SeekBar) view.findViewById(R.id.skbar_dlg);
@@ -140,14 +140,14 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
         builder.setTitle(title);
         builder.setView(view);
         //初始化SeekBar和TextView状态
-        skbar_dlg.setProgress((original / values[0] - 1) * (100 / (values.length - 1)));
-        tv_dlg_status.setText(String.valueOf(original));
+        skbar_dlg.setProgress(oriIndex * unit * 2);
+        tv_dlg_status.setText(String.valueOf(values[oriIndex]));
         //设置SeekBar监听器
         skbar_dlg.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             //按移动SeekBar的情况更新TextView
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                float bound = unit;
+                int bound = unit;
                 for (int value : values) {
                     if (progress < bound) {
                         tv_dlg_status.setText(String.valueOf(value));
@@ -165,10 +165,10 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
-                float bound = unit;
+                int bound = unit;
                 for(int i = 0; i < values.length; ++i) {
                     if(progress < bound) {
-                        seekBar.setProgress((int) (2 * i * unit));
+                        seekBar.setProgress(2 * i * unit);
                         break;
                     } else {
                         bound += 2 * unit;
@@ -180,7 +180,7 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
         builder.setPositiveButton(R.string.fragment_settings_confirm, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                onConfirmListener.process((int) (skbar_dlg.getProgress() / unit / 2));
+                onConfirmListener.process(skbar_dlg.getProgress() / unit / 2);
             }
         });
         return builder.create();
@@ -251,13 +251,14 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
      */
     private void locationIntervalOnClick() {
         if(locationIntervalDialog == null) {
+            int locationInterval = preferences.getLocationInterval();
+            int oriIndex = locationInterval / LOCATION_INTERVAL_MIN - 1;
             final int[] values = new int[5];
             for(int i = 0; i < values.length; ++i) {
                 values[i] = (i + 1) * LOCATION_INTERVAL_MIN;
             }
-            int locationInterval = preferences.getLocationInterval();
             locationIntervalDialog = createProgressDialog(R.string.fragment_settings_locationInterval,
-                    locationInterval, values, new OnConfirmListener() {
+                    oriIndex, values, new OnConfirmListener() {
                         @Override
                         public void process(int index) {
                             preferences.setLocationInterval(values[index]);
@@ -276,10 +277,11 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
      */
     private void numberOfWifiApOnClick() {
         if(numOfWifiApDialog == null) {
-            final int[] values = new int[]{6, 7, 8, 9, 10};
             int numberOfWifiAp = preferences.getNumberOfWifiAp();
+            final int[] values = new int[]{6, 7, 8, 9, 10};
+            int oriIndex = numberOfWifiAp - values[0];
             numOfWifiApDialog = createProgressDialog(R.string.fragment_settings_numberOfWifiAP,
-                    numberOfWifiAp, values, new OnConfirmListener() {
+                    oriIndex, values, new OnConfirmListener() {
                         @Override
                         public void process(int index) {
                             preferences.setNumberOfWifiAp(values[index]);
@@ -298,12 +300,13 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
      */
     private void numberOfAcquisitionOnClick() {
         if(numOfAcquisitionDialog == null) {
+            int numberOfAquisition = preferences.getNumberOfAcquisition();
+            int oriIndex = numberOfAquisition / NUMBER_OF_ACQUISITION_MIN - 1;
             final int[] values = new int[5];
             for(int i = 0; i < values.length; ++i) {
                 values[i] = (i + 1) * NUMBER_OF_ACQUISITION_MIN;
             }
-            int numberOfAquisition = preferences.getNumberOfAcquisition();
-            numOfAcquisitionDialog = createProgressDialog(R.string.fragment_settings_numberOfAcquisition, numberOfAquisition,
+            numOfAcquisitionDialog = createProgressDialog(R.string.fragment_settings_numberOfAcquisition, oriIndex,
                     values, new OnConfirmListener() {
                         @Override
                         public void process(int index) {

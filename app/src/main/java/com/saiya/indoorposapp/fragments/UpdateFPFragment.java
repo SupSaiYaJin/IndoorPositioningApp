@@ -88,7 +88,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
     private void chooseSceneOnClick() {
         new MainActivity.ChooseSceneTask(mActivity) {
             @Override
-            protected void onChooseScene(String sceneName, float mapScale) {
+            protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
                 tv_updateFP_sceneName.setText(sceneName);
             }
         }.execute();
@@ -113,6 +113,10 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         }
         if(tv_updateFP_sceneName.getText().equals(getString(R.string.activity_main_defaultScene))) {
             Toast.makeText(mActivity, R.string.fragment_updateFP_invalidCoord, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if(!mActivity.checkWifiState()) {
+            Toast.makeText(mActivity, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
             return;
         }
         switch (v.getId()) {
@@ -155,6 +159,9 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             for(int i = 0; i < numberOfAcquision; ++i) {
                 publishProgress(i + 1);
                 List<WifiFingerprint> wifiScanResult = mActivity.getWifiScanResult();
+                if(wifiScanResult == null) {
+                    return PositioningResponse.NETWORK_ERROR;
+                }
                 for(WifiFingerprint wifiFingerprint : wifiScanResult) {
                     String mac = wifiFingerprint.getMac();
                     float rssi = wifiFingerprint.getRssi();

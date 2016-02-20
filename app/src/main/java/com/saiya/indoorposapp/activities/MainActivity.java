@@ -204,8 +204,9 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
                     //若点确定按钮,做对应的操作
                     if(which == AlertDialog.BUTTON_POSITIVE) {
                         if(mSelectedWhich != -1) {
-                            onChooseScene(mSceneList.get(mSelectedWhich).getSceneName(),
-                                    mSceneList.get(mSelectedWhich).getScale());
+                            SceneInfo sceneInfo = mSceneList.get(mSelectedWhich);
+                            onChooseScene(sceneInfo.getSceneName(), sceneInfo.getScale(),
+                                    sceneInfo.getLastUpdateTime());
                         }
                     //若点击单选项,仅改变mSelectedWhich的值
                     } else {
@@ -220,7 +221,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
             builder.show();
         }
 
-        protected void onChooseScene(String sceneName, float mapScale) {
+        protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
 
         }
     }
@@ -405,6 +406,13 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
 
     }
 
+    /**
+     * 检查WiFi状态
+     * @return WiFi开启则返回true
+     */
+    public boolean checkWifiState() {
+        return mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED;
+    }
     private String[] wifiScanResultOfN = new String[2];
     /**
      * 获取信号强度最强的前n个WiFi信息
@@ -414,7 +422,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
      */
     public String[] getWifiScanResult(int n) {
         //若未开WiFi返回null
-        if(mWifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
+        if(!checkWifiState()) {
             return null;
         }
         mWifiManager.startScan();
@@ -450,8 +458,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
      */
     public List<WifiFingerprint> getWifiScanResult() {
         allWifiScanResult.clear();
-        if(mWifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-            Toast.makeText(this, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
+        if(!checkWifiState()) {
             return null;
         }
         mWifiManager.startScan();

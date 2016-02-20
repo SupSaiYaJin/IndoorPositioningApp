@@ -78,7 +78,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
     private void chooseSceneNameOnClick() {
         new MainActivity.ChooseSceneTask(mActivity) {
             @Override
-            protected void onChooseScene(String sceneName, float mapScale) {
+            protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
                 edtTxt_updateMap_sceneName.setText(sceneName);
             }
         }.execute();
