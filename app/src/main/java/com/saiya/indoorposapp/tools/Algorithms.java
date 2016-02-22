@@ -17,8 +17,8 @@ public class Algorithms {
      * @param end 终止位置
      * @param K 需要的个数
      */
-    public static void findKStrongestRSSI(List<WifiFingerprint> rssiList, int start, int
-            end, int K) {
+    public static void findKStrongestRSSI(List<WifiFingerprint> rssiList,
+            int start, int end, int K) {
         if(end - start + 1 < K) {
             return;
         }

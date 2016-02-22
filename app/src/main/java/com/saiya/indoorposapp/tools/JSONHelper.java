@@ -51,7 +51,7 @@ public class JSONHelper {
      * @return 返回存储SceneInfo对象的List,信息包含场景名称,场景比例尺的值,场景的上次更新时间
      */
     public static List<SceneInfo> getSceneListResponse(String jsonResponse)
-    throws UnauthorizedException {
+            throws UnauthorizedException {
         if(jsonResponse.equals("{\"authorized\":false}")) {
             throw new UnauthorizedException();
         }

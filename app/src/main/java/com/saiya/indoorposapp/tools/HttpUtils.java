@@ -200,7 +200,7 @@ public class HttpUtils {
      * @return 返回float[],float[0]为X坐标值,float[1]为Y坐标值
      */
     public static float[] locateOnWifi(String sceneName, String mac, String rssi)
-    throws UnauthorizedException {
+            throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("sceneName", sceneName);
         requestPropertyMap.put("locateType", "1");
@@ -216,9 +216,8 @@ public class HttpUtils {
      * @param geomagnetic_z 采集到的Z方向磁场强度
      * @return 返回float[],float[0]为X坐标值,float[1]为Y坐标值
      */
-    public static float[]
-    locateOnGeomagnetic(String sceneName, float geomagnetic_y, float geomagnetic_z)
-    throws UnauthorizedException {
+    public static float[] locateOnGeomagnetic(String sceneName,
+            float geomagnetic_y, float geomagnetic_z) throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("sceneName", sceneName);
         requestPropertyMap.put("locateType", "2");
@@ -236,9 +235,8 @@ public class HttpUtils {
      * @param geomagnetic_z 采集到的Z方向磁场强度
      * @return 返回float[],float[0]为X坐标值,float[1]为Y坐标值
      */
-    public static float[]
-    locateOnBoth(String sceneName, String mac, String rssi, float geomagnetic_y, float geomagnetic_z)
-    throws UnauthorizedException {
+    public static float[] locateOnBoth(String sceneName, String mac, String rssi,
+            float geomagnetic_y, float geomagnetic_z) throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("sceneName", sceneName);
         requestPropertyMap.put("locateType", "0");
@@ -258,9 +256,8 @@ public class HttpUtils {
      * @param rssi 采集到的RSSI值,形式为rssi1,rssi2,...,rssiN
      * @return 返回true表示更新成功,false表示更新失败
      */
-    public static boolean
-    updateWifiFingerprint(String sceneName, float location_x, float location_y, String mac, String rssi)
-    throws UnauthorizedException {
+    public static boolean updateWifiFingerprint(String sceneName, float location_x,
+            float location_y, String mac, String rssi) throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("updateType", "wifi");
         requestPropertyMap.put("sceneName", sceneName);
@@ -280,10 +277,9 @@ public class HttpUtils {
      * @param geomagnetic_z 采集到的Z方向磁场强度
      * @return 返回true表示更新成功,false表示更新失败
      */
-    public static boolean
-    updateGeomagneticFingerprint(String sceneName, float location_x, float location_y,
-                                 float geomagnetic_y, float geomagnetic_z)
-    throws UnauthorizedException {
+    public static boolean updateGeomagneticFingerprint(String sceneName,
+            float location_x, float location_y, float geomagnetic_y, float geomagnetic_z)
+            throws UnauthorizedException {
         Map<String, String> requestPropertyMap = new HashMap<>();
         requestPropertyMap.put("updateType", "geomagnetic");
         requestPropertyMap.put("sceneName", sceneName);
@@ -338,7 +334,7 @@ public class HttpUtils {
      * @return 返回true代表上传成功,false代表上传失败
      */
     public static boolean uploadMap(String sceneName, float scale, byte[] mapBytes)
-    throws UnauthorizedException {
+            throws UnauthorizedException {
         /** 边界标识,随机生成 */
         String BOUNDARY =  UUID.randomUUID().toString();
         String PREFIX = "--";

@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.MainActivity;
+import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.bean.WifiFingerprint;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.Algorithms;
@@ -88,12 +89,13 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         if(v.getId() == R.id.rl_updateFP_sceneName) {
-            new MainActivity.ChooseSceneTask(mActivity) {
-                @Override
-                protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
-                    tv_updateFP_sceneName.setText(sceneName);
-                }
-            }.execute();
+            new MainActivity.ChooseSceneTask(mActivity,
+                    new MainActivity.ChooseSceneTask.OnChooseSceneListener() {
+                        @Override
+                        public void onChooseScene(SceneInfo sceneInfo) {
+                            tv_updateFP_sceneName.setText(sceneInfo.getSceneName());
+                        }
+                    }).execute();
             return;
         }
         float location_x;

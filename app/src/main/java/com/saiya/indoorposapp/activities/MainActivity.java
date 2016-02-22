@@ -136,12 +136,21 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
      */
     public static class ChooseSceneTask extends AsyncTask<Void, Void, String[]> {
 
+        /**
+         * 封装选择场景时发生的事件
+         */
+        public interface OnChooseSceneListener {
+            void onChooseScene(SceneInfo sceneInfo);
+        }
+
         private ProgressDialog mProgressDialog;
         private MainActivity mActivity;
         private List<SceneInfo> mSceneList;
+        private OnChooseSceneListener mlistener;
 
-        public ChooseSceneTask(MainActivity activity) {
+        public ChooseSceneTask(MainActivity activity, OnChooseSceneListener listener) {
             mActivity = activity;
+            mlistener = listener;
         }
 
         @Override
@@ -197,8 +206,9 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
                     if(which == AlertDialog.BUTTON_POSITIVE) {
                         if(mSelectedWhich != -1) {
                             SceneInfo sceneInfo = mSceneList.get(mSelectedWhich);
-                            onChooseScene(sceneInfo.getSceneName(), sceneInfo.getScale(),
-                                    sceneInfo.getLastUpdateTime());
+                            if(mlistener != null) {
+                                mlistener.onChooseScene(sceneInfo);
+                            }
                         }
                     //若点击单选项,仅改变mSelectedWhich的值
                     } else {
@@ -213,9 +223,6 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
             builder.show();
         }
 
-        protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
-
-        }
     }
 
     @Override

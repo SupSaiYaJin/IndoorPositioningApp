@@ -18,6 +18,7 @@ import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.MainActivity;
+import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
@@ -247,16 +248,18 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      */
     private void switchScene() {
         if(!isRunning) {
-            new MainActivity.ChooseSceneTask((MainActivity) mActivity) {
+            new MainActivity.ChooseSceneTask(mActivity,
+                    new MainActivity.ChooseSceneTask.OnChooseSceneListener() {
                 @Override
-                protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
-                    preferences.setLastSceneName(sceneName);
-                    preferences.setLastSceneScale(mapScale);
-                    mSceneName = sceneName;
-                    mMapScale = mapScale;
-                    setMap(sceneName, lastUpdateTime);
+                public void onChooseScene(SceneInfo sceneInfo) {
+                    preferences.setLastSceneName(sceneInfo.getSceneName());
+                    preferences.setLastSceneScale(sceneInfo.getScale());
+                    mSceneName = sceneInfo.getSceneName();
+                    mMapScale = sceneInfo.getScale();
+                    setMap(sceneInfo.getSceneName(), sceneInfo.getLastUpdateTime());
+
                 }
-            }.execute();
+            }).execute();
         } else {
             Toast.makeText(mActivity, R.string.fragment_positioning_positioningRunning, Toast.LENGTH_SHORT).show();
         }

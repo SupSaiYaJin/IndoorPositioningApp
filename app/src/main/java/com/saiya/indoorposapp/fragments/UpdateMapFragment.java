@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.MainActivity;
+import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
@@ -76,12 +77,13 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
      * 点击选择场景后触发的事件
      */
     private void chooseSceneNameOnClick() {
-        new MainActivity.ChooseSceneTask(mActivity) {
+        new MainActivity.ChooseSceneTask(mActivity,
+                new MainActivity.ChooseSceneTask.OnChooseSceneListener() {
             @Override
-            protected void onChooseScene(String sceneName, float mapScale, long lastUpdateTime) {
-                edtTxt_updateMap_sceneName.setText(sceneName);
+            public void onChooseScene(SceneInfo sceneInfo) {
+                edtTxt_updateMap_sceneName.setText(sceneInfo.getSceneName());
             }
-        }.execute();
+        }).execute();
     }
 
     /**

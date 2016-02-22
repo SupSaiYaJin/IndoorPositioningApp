@@ -132,6 +132,7 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private interface OnConfirmListener {
         void process(int index);
     }
+
     /**
      * 创建进度条对话框的工厂方法
      * @param title 对话框标题,为资源ID
@@ -140,9 +141,8 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
      * @param onConfirmListener 点击确定按钮后执行的动作
      * @return 返回一个AlertDialog对象
      */
-    private AlertDialog
-    createProgressDialog(int title, int oriIndex, final int[] values,
-                         final OnConfirmListener onConfirmListener) {
+    private AlertDialog createProgressDialog(int title, int oriIndex, final int[] values,
+            final OnConfirmListener onConfirmListener) {
         //由数组大小算出的最小进度单元
         final int unit = 50 / (values.length - 1);
         View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar,
