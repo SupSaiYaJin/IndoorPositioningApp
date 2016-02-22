@@ -34,7 +34,7 @@ public class ActivityCollector {
      */
     public static void finishAll() {
         for(Activity activity : activities) {
-            if(!activity.isFinishing()) {
+            if (!activity.isFinishing()) {
                 activity.finish();
             }
         }

@@ -39,7 +39,7 @@ public class RegisterActivity extends Activity implements View.OnClickListener{
         //处理注册时发回的消息
         @Override
         public void handleMessage(Message msg) {
-            if(mActivity.get() == null) {
+            if (mActivity.get() == null) {
                 return;
             }
             switch ((AuthResponse) msg.obj) {
@@ -92,11 +92,11 @@ public class RegisterActivity extends Activity implements View.OnClickListener{
             case R.id.btn_register_confirm:
                 final String username = edtTxt_register_username.getText().toString();
                 final String password = edtTxt_register_password.getText().toString();
-                if(username.length() == 0 || password.length() == 0) {
+                if (username.length() == 0 || password.length() == 0) {
                     Toast.makeText(this, R.string.activity_common_invalidInput, Toast.LENGTH_SHORT).show();
                     break;
                 }
-                if(username.length() > 20 || password.length() > 20) {
+                if (username.length() > 20 || password.length() > 20) {
                     Toast.makeText(this, R.string.activity_common_oversizeInput, Toast.LENGTH_SHORT).show();
                     break;
                 }

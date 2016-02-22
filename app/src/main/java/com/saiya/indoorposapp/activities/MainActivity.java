@@ -100,7 +100,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         //处理更新指纹数据时返回的消息
         @Override
         public void handleMessage(Message msg) {
-            if(mActivity.get() == null) {
+            if (mActivity.get() == null) {
                 return;
             }
             switch ((PositioningResponse) msg.obj) {
@@ -168,7 +168,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         protected String[] doInBackground(Void... params) {
             try {
                 mSceneList = HttpUtils.getSceneList();
-                if(mSceneList == null || mSceneList.size() == 0) {
+                if (mSceneList == null || mSceneList.size() == 0) {
                     Message msg = new Message();
                     msg.obj = PositioningResponse.NETWORK_ERROR;
                     mActivity.getMyHandler().sendMessage(msg);
@@ -192,7 +192,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         @Override
         protected void onPostExecute(String[] strings) {
             mProgressDialog.dismiss();
-            if(strings == null) {
+            if (strings == null) {
                 return;
             }
             DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
@@ -203,10 +203,10 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     //若点确定按钮,做对应的操作
-                    if(which == AlertDialog.BUTTON_POSITIVE) {
-                        if(mSelectedWhich != -1) {
+                    if (which == AlertDialog.BUTTON_POSITIVE) {
+                        if (mSelectedWhich != -1) {
                             SceneInfo sceneInfo = mSceneList.get(mSelectedWhich);
-                            if(mlistener != null) {
+                            if (mlistener != null) {
                                 mlistener.onChooseScene(sceneInfo);
                             }
                         }
@@ -421,7 +421,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
      */
     public String[] getWifiScanResult(int n) {
         //若未开WiFi返回null
-        if(!checkWifiState()) {
+        if (!checkWifiState()) {
             return null;
         }
         mWifiManager.startScan();
@@ -457,7 +457,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
      */
     public List<WifiFingerprint> getWifiScanResult() {
         allWifiScanResult.clear();
-        if(!checkWifiState()) {
+        if (!checkWifiState()) {
             return null;
         }
         mWifiManager.startScan();

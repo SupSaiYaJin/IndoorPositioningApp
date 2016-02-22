@@ -107,13 +107,13 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         String scaleStr = edtTxt_updateMap_scale.getText().toString();
         String filePath = edtTxt_updateMap_filePath.getText().toString();
         //检查参数是否合法
-        if(sceneName.equals(getString(R.string.activity_main_defaultScene)) || sceneName.length() == 0 || filePath.length() == 0) {
+        if (sceneName.equals(getString(R.string.activity_main_defaultScene)) || sceneName.length() == 0 || filePath.length() == 0) {
             Toast.makeText(mActivity, R.string.fragment_updateMap_confirmFailed, Toast.LENGTH_SHORT).show();
             return;
         }
         //将比例尺转为float
         final float scale;
-        if(scaleStr.length() != 0) {
+        if (scaleStr.length() != 0) {
             scale = Float.parseFloat(scaleStr);
         } else {
             scale = 0;
@@ -146,7 +146,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
                 boolean uploadResult;
                 try {
                     uploadResult = HttpUtils.uploadMap(sceneName, scale, mapBytes);
-                    if(uploadResult) {
+                    if (uploadResult) {
                         Message msg = new Message();
                         msg.obj = PositioningResponse.UPDATE_MAP_SUCCEED;
                         mActivity.getMyHandler().sendMessage(msg);
@@ -187,7 +187,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(resultCode == Activity.RESULT_OK) {
+        if (resultCode == Activity.RESULT_OK) {
             switch(requestCode) {
                 case 1:
                     Uri uri = data.getData();

@@ -71,7 +71,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                 public void run() {
                     String[] wifiData = mActivity.getWifiScanResult(mNumberOfAP);
                     //若WiFi关闭,结束定位,并报网络错误
-                    if(wifiData == null) {
+                    if (wifiData == null) {
                         isRunning = false;
                         mHandler.removeCallbacks(mLocateRunnable);
                         Message msg = new Message();
@@ -106,7 +106,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                         msg.obj = PositioningResponse.UNAUTHORIZED;
                         mActivity.getMyHandler().sendMessage(msg);
                     }
-                    if(result[0] == -1 || result[1] == -1) {
+                    if (result[0] == -1 || result[1] == -1) {
                         isRunning = false;
                         mHandler.removeCallbacks(mLocateRunnable);
                         Message msg = new Message();
@@ -167,7 +167,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         btn_positioning_switch.setOnClickListener(this);
         mSceneName = preferences.getLastSceneName();
         mMapScale = preferences.getLastSceneScale();
-        if(mSceneName != null && mMapScale != 0f) {
+        if (mSceneName != null && mMapScale != 0f) {
             setMap(mSceneName, 0);
         }
     }
@@ -179,18 +179,18 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         //对应地图文件的File对象
         File mapFile = new File(mActivity.getFilesDir(), sceneName + ".jpg");
         //若文件不存在,则下载地图
-        if(!mapFile.exists()) {
+        if (!mapFile.exists()) {
             new DownloadMapTask().execute(sceneName);
         } else {
             //若开启了自动更新地图,且服务器的地图较新,则下载地图
-            if(preferences.getAutoUpdateMap() && mapFile.lastModified() < lastUpdateTime) {
+            if (preferences.getAutoUpdateMap() && mapFile.lastModified() < lastUpdateTime) {
                 new DownloadMapTask().execute(sceneName);
             //否则直接读入本地地图文件
             } else {
                 try (FileInputStream in = new FileInputStream(mapFile)){
                     Bitmap map = BitmapFactory.decodeStream(in);
                     //若无法解析地图文件,重新下载地图
-                    if(map == null) {
+                    if (map == null) {
                         new DownloadMapTask().execute(sceneName);
                         return;
                     }
@@ -223,12 +223,12 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      * 开始定位
      */
     private void startLocation() {
-        if(!mActivity.checkWifiState()) {
+        if (!mActivity.checkWifiState()) {
             Toast.makeText(mActivity, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
             return;
         }
         Toast.makeText(mActivity, R.string.fragment_positioning_positioningStarted, Toast.LENGTH_SHORT).show();
-        if(!isRunning) {
+        if (!isRunning) {
             isRunning = true;
             mHandler.post(mLocateRunnable);
         }
@@ -247,7 +247,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      * 切换场景
      */
     private void switchScene() {
-        if(!isRunning) {
+        if (!isRunning) {
             new MainActivity.ChooseSceneTask(mActivity,
                     new MainActivity.ChooseSceneTask.OnChooseSceneListener() {
                 @Override
@@ -287,7 +287,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
             try (FileOutputStream out = mActivity
                     .openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE)){
                 mapBytes = HttpUtils.downloadMap(params[0]);
-                if(mapBytes == null) {
+                if (mapBytes == null) {
                     return PositioningResponse.NETWORK_ERROR;
                 }
                 out.write(mapBytes);
@@ -307,9 +307,9 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
             mProgressDialog.dismiss();
             Message msg = new Message();
             msg.obj = response;
-            if(response == PositioningResponse.DOWNLOAD_MAP_SUCCEED) {
+            if (response == PositioningResponse.DOWNLOAD_MAP_SUCCEED) {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
-                if(bitmap != null) {
+                if (bitmap != null) {
                     mv_positioning_map.setMap(bitmap, mMapScale);
                 } else {
                     msg.obj = PositioningResponse.NETWORK_ERROR;

@@ -26,9 +26,9 @@ public enum AuthResponse {
     public static AuthResponse getInstance(int responseCode) {
         switch (responseCode) {
             case 0:
-                return  LOGIN_SUCCEED;
+                return LOGIN_SUCCEED;
             case 1:
-                return  USERNAME_NOT_EXIST;
+                return USERNAME_NOT_EXIST;
             case 2:
                 return PASSWORD_ERROR;
             case 3:

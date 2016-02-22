@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -21,6 +20,7 @@ import com.saiya.indoorposapp.activities.LoginActivity;
 import com.saiya.indoorposapp.activities.MainActivity;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PreferencessHelper;
+import com.saiya.indoorposapp.ui.SeekbarSettingDialog;
 
 import java.io.File;
 
@@ -28,7 +28,7 @@ import java.io.File;
  * 设置Fragment
  */
 public class SettingsFragment extends Fragment
-implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+        implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
 
     /** 存储依附的MainActivity引用 */
     private MainActivity mActivity;
@@ -44,9 +44,9 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private TextView tv_settings_numberOfWifiAp;
     private TextView tv_settings_numberOfAcquisition;
 
-    private AlertDialog locationIntervalDialog;
-    private AlertDialog numOfWifiApDialog;
-    private AlertDialog numOfAcquisitionDialog;
+    private SeekbarSettingDialog locationIntervalDialog;
+    private SeekbarSettingDialog numOfWifiApDialog;
+    private SeekbarSettingDialog numOfAcquisitionDialog;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -126,87 +126,15 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
         btn_settings_logout.setOnClickListener(this);
     }
 
-    /**
-     * 封装对设置结果执行的操作
-     */
-    private interface OnConfirmListener {
-        void process(int index);
-    }
 
-    /**
-     * 创建进度条对话框的工厂方法
-     * @param title 对话框标题,为资源ID
-     * @param oriIndex 初始值索引
-     * @param values 可以调整的值的数组
-     * @param onConfirmListener 点击确定按钮后执行的动作
-     * @return 返回一个AlertDialog对象
-     */
-    private AlertDialog createProgressDialog(int title, int oriIndex, final int[] values,
-            final OnConfirmListener onConfirmListener) {
-        //由数组大小算出的最小进度单元
-        final int unit = 50 / (values.length - 1);
-        View view = getLayoutInflater(null).inflate(R.layout.dlg_skbar,
-                (ViewGroup)mActivity.findViewById(R.id.sclVi_settings), false);
-        final TextView tv_dlg_status = (TextView) view.findViewById(R.id.tv_dlg);
-        final SeekBar skbar_dlg = (SeekBar) view.findViewById(R.id.skbar_dlg);
-        //构造选择定位间隔的对话框,由一个SeekBar和一个TextView组成
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(title);
-        builder.setView(view);
-        //初始化SeekBar和TextView状态
-        skbar_dlg.setProgress(oriIndex * unit * 2);
-        tv_dlg_status.setText(String.valueOf(values[oriIndex]));
-        //设置SeekBar监听器
-        skbar_dlg.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            //按移动SeekBar的情况更新TextView
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int bound = unit;
-                for (int value : values) {
-                    if (progress < bound) {
-                        tv_dlg_status.setText(String.valueOf(value));
-                        break;
-                    } else {
-                        bound += 2 * unit;
-                    }
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-
-            //使SeekBar结束移动时只落在n分之x处
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                int progress = seekBar.getProgress();
-                int bound = unit;
-                for(int i = 0; i < values.length; ++i) {
-                    if(progress < bound) {
-                        seekBar.setProgress(2 * i * unit);
-                        break;
-                    } else {
-                        bound += 2 * unit;
-                    }
-                }
-            }
-        });
-        //设置对话框的确定按钮
-        builder.setPositiveButton(R.string.fragment_settings_confirm, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                onConfirmListener.process(skbar_dlg.getProgress() / unit / 2);
-            }
-        });
-        return builder.create();
-    }
     /**
      * 点击删除地图缓存按钮进行的操作
      */
-    private void deleteMapCacheOnClick() {
+    private void deleteMapCache() {
         File files = mActivity.getFilesDir();
-        if(files != null && files.exists() && files.isDirectory()) {
+        if (files != null && files.exists() && files.isDirectory()) {
             for (File item : files.listFiles()) {
-                if(!item.delete()) {
+                if (!item.delete()) {
                     Toast.makeText(mActivity, R.string.fragment_settings_deleteFailed, Toast.LENGTH_SHORT).show();
                     break;
                 }
@@ -218,7 +146,7 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     /**
      * 点击定位方法设置进行的操作
      */
-    private void locationMethodOnClick() {
+    private void changeLocationMethod() {
         //构造选择定位方法的对话框,由3个单选项组成
         String[] locationMethodString = new String[]{getString(R.string
                 .fragment_settings_useBothMethod), getString(R.string
@@ -231,7 +159,7 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 //若点确定按钮,做对应的操作
-                if(which == AlertDialog.BUTTON_POSITIVE) {
+                if (which == AlertDialog.BUTTON_POSITIVE) {
                     switch (mSelectedWhich) {
                         case PositioningFragment.USE_ALL_METHOD:
                             tv_settings_locationMethod.setText(R.string.fragment_settings_useBothMethod);
@@ -263,21 +191,22 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     /**
      * 点击定位间隔设置进行的操作
      */
-    private void locationIntervalOnClick() {
-        if(locationIntervalDialog == null) {
+    private void changeLocationInterval() {
+        if (locationIntervalDialog == null) {
             int locationInterval = preferences.getLocationInterval();
             int oriIndex = locationInterval / LOCATION_INTERVAL_MIN - 1;
-            final int[] values = new int[5];
+            int[] values = new int[5];
             for(int i = 0; i < values.length; ++i) {
                 values[i] = (i + 1) * LOCATION_INTERVAL_MIN;
             }
-            locationIntervalDialog = createProgressDialog(R.string.fragment_settings_locationInterval,
-                    oriIndex, values, new OnConfirmListener() {
+            locationIntervalDialog = new SeekbarSettingDialog(mActivity);
+            locationIntervalDialog.setProperties(R.string.fragment_settings_locationInterval,
+                    oriIndex, values, new SeekbarSettingDialog.OnConfirmListener() {
                         @Override
-                        public void process(int index) {
-                            preferences.setLocationInterval(values[index]);
-                            tv_settings_locationInterval.setText(String.valueOf(values[index]));
-                            mActivity.getPositioningFragment().setLocationInterval(values[index]);
+                        public void process(int value) {
+                            preferences.setLocationInterval(value);
+                            tv_settings_locationInterval.setText(String.valueOf(value));
+                            mActivity.getPositioningFragment().setLocationInterval(value);
                         }
                     });
             locationIntervalDialog.show();
@@ -289,18 +218,19 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     /**
      * 点击使用AP个数设置进行的操作
      */
-    private void numberOfWifiApOnClick() {
-        if(numOfWifiApDialog == null) {
+    private void changeNumberOfWifiAp() {
+        if (numOfWifiApDialog == null) {
             int numberOfWifiAp = preferences.getNumberOfWifiAp();
-            final int[] values = new int[]{6, 7, 8, 9, 10};
+            int[] values = new int[]{6, 7, 8, 9, 10};
             int oriIndex = numberOfWifiAp - values[0];
-            numOfWifiApDialog = createProgressDialog(R.string.fragment_settings_numberOfWifiAP,
-                    oriIndex, values, new OnConfirmListener() {
+            numOfWifiApDialog = new SeekbarSettingDialog(mActivity);
+            numOfWifiApDialog.setProperties(R.string.fragment_settings_numberOfWifiAP,
+                    oriIndex, values, new SeekbarSettingDialog.OnConfirmListener() {
                         @Override
-                        public void process(int index) {
-                            preferences.setNumberOfWifiAp(values[index]);
-                            tv_settings_numberOfWifiAp.setText(String.valueOf(values[index]));
-                            mActivity.getPositioningFragment().setNumberOfAP(values[index]);
+                        public void process(int value) {
+                            preferences.setNumberOfWifiAp(value);
+                            tv_settings_numberOfWifiAp.setText(String.valueOf(value));
+                            mActivity.getPositioningFragment().setNumberOfAP(value);
                         }
                     });
             numOfWifiApDialog.show();
@@ -312,21 +242,22 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     /**
      * 点击采集次数设置进行的操作
      */
-    private void numberOfAcquisitionOnClick() {
-        if(numOfAcquisitionDialog == null) {
+    private void changeNumberOfAcquisition() {
+        if (numOfAcquisitionDialog == null) {
             int numberOfAquisition = preferences.getNumberOfAcquisition();
             int oriIndex = numberOfAquisition / NUMBER_OF_ACQUISITION_MIN - 1;
-            final int[] values = new int[5];
+            int[] values = new int[5];
             for(int i = 0; i < values.length; ++i) {
                 values[i] = (i + 1) * NUMBER_OF_ACQUISITION_MIN;
             }
-            numOfAcquisitionDialog = createProgressDialog(R.string.fragment_settings_numberOfAcquisition, oriIndex,
-                    values, new OnConfirmListener() {
+            numOfAcquisitionDialog = new SeekbarSettingDialog(mActivity);
+            numOfAcquisitionDialog.setProperties(R.string.fragment_settings_numberOfAcquisition, oriIndex,
+                    values, new SeekbarSettingDialog.OnConfirmListener() {
                         @Override
-                        public void process(int index) {
-                            preferences.setNumberOfAcquisition(values[index]);
-                            tv_settings_numberOfAcquisition.setText(String.valueOf(values[index]));
-                            mActivity.getUpdateFPFragment().setNumberOfAcquision(values[index]);
+                        public void process(int value) {
+                            preferences.setNumberOfAcquisition(value);
+                            tv_settings_numberOfAcquisition.setText(String.valueOf(value));
+                            mActivity.getUpdateFPFragment().setNumberOfAcquision(value);
                         }
                     });
             numOfAcquisitionDialog.show();
@@ -338,7 +269,7 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     /**
      * 点击注销按钮时进行的操作
      */
-    private void logoutOnClick() {
+    private void logout() {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         builder.setTitle(R.string.fragment_settings_logoutTitle);
         builder.setMessage(R.string.fragment_settings_logoutMSG);
@@ -361,22 +292,22 @@ implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.tv_settings_deleteMapCache:
-                deleteMapCacheOnClick();
+                deleteMapCache();
                 break;
             case R.id.rl_settings_locationMethod:
-                locationMethodOnClick();
+                changeLocationMethod();
                 break;
             case R.id.rl_settings_locationInterval:
-                locationIntervalOnClick();
+                changeLocationInterval();
                 break;
             case R.id.rl_settings_numberOfWifiAp:
-                numberOfWifiApOnClick();
+                changeNumberOfWifiAp();
                 break;
             case R.id.rl_settings_numberOfAcquisition:
-                numberOfAcquisitionOnClick();
+                changeNumberOfAcquisition();
                 break;
             case R.id.btn_settings_logout:
-                logoutOnClick();
+                logout();
                 break;
             default:
                 break;

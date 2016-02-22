@@ -58,7 +58,7 @@ public class HttpUtils {
         //存储要附在内容体中的属性
         byte[] content = new byte[0];
         //若有请求参数,将它按格式拼接好后写入字节数组content中
-        if(requestPropertyMap != null) {
+        if (requestPropertyMap != null) {
             StringBuilder stringBuilder = new StringBuilder();
             for(Map.Entry<String, String> entry : requestPropertyMap.entrySet()) {
                 stringBuilder.append(entry.getKey());
@@ -85,7 +85,7 @@ public class HttpUtils {
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             conn.setRequestProperty("Content-Length", String.valueOf(content.length));
             //发起请求的路径属于/positioning时,在头中加上JSESSIONID的Cookie,保证权限,JSESSIONID在登录时获得
-            if(JSESSIONID != null && path.startsWith("/positioning")) {
+            if (JSESSIONID != null && path.startsWith("/positioning")) {
                 conn.setRequestProperty("Cookie", String.format("JSESSIONID=%s", JSESSIONID));
             }
             //获取输出流并输出内容体
@@ -94,7 +94,7 @@ public class HttpUtils {
             out.flush();
             //更新JSESSIONID,仅在登录成功后使用
             String cookie = conn.getHeaderField("Set-Cookie");
-            if(cookie != null) {
+            if (cookie != null) {
                 int start = cookie.indexOf("JSESSIONID=");
                 int end = cookie.indexOf(';');
                 JSESSIONID = cookie.substring(start + 11, end);
@@ -316,7 +316,7 @@ public class HttpUtils {
                 out.write(buffer, 0, n);
             }
             byte[] map = out.toByteArray();
-            if(map.length == 20) {
+            if (map.length == 20) {
                 throw new UnauthorizedException();
             }
             return map;

@@ -88,7 +88,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.rl_updateFP_sceneName) {
+        if (v.getId() == R.id.rl_updateFP_sceneName) {
             new MainActivity.ChooseSceneTask(mActivity,
                     new MainActivity.ChooseSceneTask.OnChooseSceneListener() {
                         @Override
@@ -109,11 +109,11 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             Toast.makeText(mActivity, R.string.fragment_updateFP_invalidCoord, Toast.LENGTH_SHORT).show();
             return;
         }
-        if(tv_updateFP_sceneName.getText().equals(getString(R.string.activity_main_defaultScene))) {
+        if (tv_updateFP_sceneName.getText().equals(getString(R.string.activity_main_defaultScene))) {
             Toast.makeText(mActivity, R.string.fragment_updateFP_invalidCoord, Toast.LENGTH_SHORT).show();
             return;
         }
-        if(!mActivity.checkWifiState()) {
+        if (!mActivity.checkWifiState()) {
             Toast.makeText(mActivity, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -157,13 +157,13 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             for(int i = 0; i < numberOfAcquision; ++i) {
                 publishProgress(i + 1);
                 List<WifiFingerprint> wifiScanResult = mActivity.getWifiScanResult();
-                if(wifiScanResult == null) {
+                if (wifiScanResult == null) {
                     return PositioningResponse.NETWORK_ERROR;
                 }
                 for(WifiFingerprint wifiFingerprint : wifiScanResult) {
                     String mac = wifiFingerprint.getMac();
                     float rssi = wifiFingerprint.getRssi();
-                    if(wifiScanResultSum.containsKey(mac)) {
+                    if (wifiScanResultSum.containsKey(mac)) {
                         float rssiSum = wifiScanResultSum.get(mac)[0];
                         float count = wifiScanResultSum.get(mac)[1];
                         wifiScanResultSum.put(mac, new float[]{rssiSum + rssi, count + 1});
@@ -171,7 +171,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                         wifiScanResultSum.put(mac, new float[]{rssi, 1});
                     }
                 }
-                if(i != numberOfAcquision - 1) {
+                if (i != numberOfAcquision - 1) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -206,7 +206,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                 e.printStackTrace();
                 return PositioningResponse.UNAUTHORIZED;
             }
-            if(updateResult) {
+            if (updateResult) {
                 return PositioningResponse.UPDATE_FP_SUCCEED;
             } else {
                 return PositioningResponse.NETWORK_ERROR;
@@ -215,7 +215,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            if(values[0] == numberOfAcquision) {
+            if (values[0] == numberOfAcquision) {
                 progressDialog.setMessage(getString(R.string.fragment_updateFP_updating));
             }
             progressDialog.setProgress(values[0]);
@@ -280,7 +280,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                 e.printStackTrace();
                 return PositioningResponse.UNAUTHORIZED;
             }
-            if(updateResult) {
+            if (updateResult) {
                 return PositioningResponse.UPDATE_FP_SUCCEED;
             } else {
                 return PositioningResponse.NETWORK_ERROR;
@@ -289,7 +289,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            if(values[0] == numberOfAcquision) {
+            if (values[0] == numberOfAcquision) {
                 progressDialog.setMessage(getString(R.string.fragment_updateFP_updating));
             }
             progressDialog.setProgress(values[0]);
