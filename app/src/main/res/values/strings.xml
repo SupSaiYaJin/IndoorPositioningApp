@@ -50,7 +50,9 @@
     <string name="fragment_updateMap_scaleHint">请输入比例尺:</string>
     <string name="fragment_updateMap_pathHint">请输入文件路径:</string>
     <string
-        name="fragment_updateMap_help">提示:要上传新地图请自行输入场景名称.比例尺的含义为一米代表的像素数,可以是小数.比如:要上传的地图分辨率为1000*500,对应场景的长宽分别为10米和5米,
+        name="fragment_updateMap_help">提示:要上传新地图请自行输入场景名称,
+        比例尺的含义为一个单位长度代表的像素数,可以是小数.
+        比如:要上传的地图分辨率为1000*500,对应场景的长宽分别为10个单位长度和5个单位长度,
         那么比例尺应填入100.</string>
     <string name="fragment_updateMap_chooseFile">选择文件</string>
     <string name="fragment_updateMap_chooseSceneName">选择场景</string>

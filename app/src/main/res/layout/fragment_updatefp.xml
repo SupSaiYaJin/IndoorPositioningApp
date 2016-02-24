@@ -67,10 +67,11 @@
         android:background="@color/common_grey"/>
 
     <RelativeLayout
+        android:id="@+id/rl_updateFP_sceneName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:background="@color/bg_white">
+        android:background="@drawable/settings_tv_style">
 
         <TextView
             android:layout_width="wrap_content"
@@ -80,7 +81,6 @@
 
         <TextView
             android:id="@+id/tv_updateFP_sceneName"
-            android:clickable="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"

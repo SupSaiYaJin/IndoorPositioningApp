@@ -10,15 +10,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.MainActivity;
+import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.bean.WifiFingerprint;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.Algorithms;
 import com.saiya.indoorposapp.tools.HttpUtils;
+import com.saiya.indoorposapp.tools.PositioningResponse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,31 +74,27 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         edtTxt_updateFP_coorX = (EditText) mActivity.findViewById(R.id.edtTxt_updateFP_coorX);
         edtTxt_updateFP_coorY = (EditText) mActivity.findViewById(R.id.edtTxt_updateFP_coorY);
         tv_updateFP_sceneName = (TextView) mActivity.findViewById(R.id.tv_updateFP_sceneName);
+        RelativeLayout rl_updateFP_sceneName =
+                (RelativeLayout) mActivity.findViewById(R.id.rl_updateFP_sceneName);
         Button btn_updateFingerprint_wifi = (Button) mActivity.findViewById(R.id.btn_updateFP_wifi);
-        Button btn_updateFingerprint_geomagnetic = (Button) mActivity.findViewById(R.id.btn_updateFP_geomagnetic);
-        tv_updateFP_sceneName.setOnClickListener(this);
+        Button btn_updateFingerprint_geomagnetic =
+                (Button) mActivity.findViewById(R.id.btn_updateFP_geomagnetic);
+        rl_updateFP_sceneName.setOnClickListener(this);
         btn_updateFingerprint_wifi.setOnClickListener(this);
         btn_updateFingerprint_geomagnetic.setOnClickListener(this);
         tv_updateFP_sceneName.setText(R.string.activity_main_defaultScene);
         numberOfAcquision = mActivity.getPreferences().getNumberOfAcquisition();
     }
 
-    /**
-     * 点击选择场景名后触发的事件
-     */
-    private void chooseSceneOnClick() {
-        new MainActivity.ChooseSceneTask(mActivity) {
-            @Override
-            protected void onChooseScene(String sceneName, float mapScale) {
-                tv_updateFP_sceneName.setText(sceneName);
-            }
-        }.execute();
-    }
-
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.tv_updateFP_sceneName) {
-            chooseSceneOnClick();
+        if (v.getId() == R.id.rl_updateFP_sceneName) {
+            mActivity.new ChooseSceneTask(new MainActivity.OnChooseSceneListener() {
+                        @Override
+                        public void onChooseScene(SceneInfo sceneInfo) {
+                            tv_updateFP_sceneName.setText(sceneInfo.getSceneName());
+                        }
+                    }).execute();
             return;
         }
         float location_x;
@@ -109,8 +108,12 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             Toast.makeText(mActivity, R.string.fragment_updateFP_invalidCoord, Toast.LENGTH_SHORT).show();
             return;
         }
-        if(tv_updateFP_sceneName.getText().equals(getString(R.string.activity_main_defaultScene))) {
+        if (tv_updateFP_sceneName.getText().equals(getString(R.string.activity_main_defaultScene))) {
             Toast.makeText(mActivity, R.string.fragment_updateFP_invalidCoord, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!mActivity.checkWifiState()) {
+            Toast.makeText(mActivity, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
             return;
         }
         switch (v.getId()) {
@@ -128,7 +131,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
      * 更新WiFi指纹数据的异步任务类,需要提供当前地点的X，Y坐标
      */
 
-    private class UpdateWifiFPTask extends AsyncTask<Float, Integer, Integer> {
+    private class UpdateWifiFPTask extends AsyncTask<Float, Integer, PositioningResponse> {
         private ProgressDialog progressDialog;
 
         private String sceneName;
@@ -146,25 +149,28 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         }
 
         @Override
-        protected Integer doInBackground(Float... params) {
+        protected PositioningResponse doInBackground(Float... params) {
             /** 存储所有WiFi强度信息,String为MAC地址,float数组第一位为多次RSS值的和,第二位为扫描到的次数 */
             Map<String, float[]> wifiScanResultSum = new HashMap<>();
             //进行numberOfAcquision次采集,并更新进度条
-            for(int i = 0; i < numberOfAcquision; ++i) {
+            for (int i = 0; i < numberOfAcquision; ++i) {
                 publishProgress(i + 1);
                 List<WifiFingerprint> wifiScanResult = mActivity.getWifiScanResult();
-                for(WifiFingerprint wifiFingerprint : wifiScanResult) {
+                if (wifiScanResult == null) {
+                    return PositioningResponse.NETWORK_ERROR;
+                }
+                for (WifiFingerprint wifiFingerprint : wifiScanResult) {
                     String mac = wifiFingerprint.getMac();
                     float rssi = wifiFingerprint.getRssi();
-                    if(wifiScanResultSum.containsKey(mac)) {
+                    if (wifiScanResultSum.containsKey(mac)) {
                         float rssiSum = wifiScanResultSum.get(mac)[0];
                         float count = wifiScanResultSum.get(mac)[1];
                         wifiScanResultSum.put(mac, new float[]{rssiSum + rssi, count + 1});
-                    }
-                    else
+                    } else {
                         wifiScanResultSum.put(mac, new float[]{rssi, 1});
+                    }
                 }
-                if(i != numberOfAcquision - 1) {
+                if (i != numberOfAcquision - 1) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -175,14 +181,16 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             /** 存储平均后的扫描结果 */
             List<WifiFingerprint> wifiScanResultAveraged = new ArrayList<>();
             //将WiFi扫描结果取平均
-            for(Map.Entry<String, float[]> entry : wifiScanResultSum.entrySet())
-                wifiScanResultAveraged.add(new WifiFingerprint(entry.getKey(), entry.getValue()[0] / entry.getValue()[1]));
+            for (Map.Entry<String, float[]> entry : wifiScanResultSum.entrySet())
+                wifiScanResultAveraged.add(new WifiFingerprint
+                        (entry.getKey(), entry.getValue()[0] / entry.getValue()[1]));
             //将WiFi扫描结果的前N强的信息取出
-            Algorithms.findKStrongestRSSI(wifiScanResultAveraged, 0, wifiScanResultAveraged.size() - 1, NUMBER_OF_UPDATE_WIFIAP);
+            Algorithms.findKStrongestRSSI(wifiScanResultAveraged,
+                    0, wifiScanResultAveraged.size() - 1, NUMBER_OF_UPDATE_WIFIAP);
             //将WiFi扫描结果转为String以发送到服务器
             StringBuilder mac = new StringBuilder();
             StringBuilder rssi = new StringBuilder();
-            for(int i = 0; i < NUMBER_OF_UPDATE_WIFIAP && i < wifiScanResultAveraged.size(); ++i) {
+            for (int i = 0; i < NUMBER_OF_UPDATE_WIFIAP && i < wifiScanResultAveraged.size(); ++i) {
                 mac.append(wifiScanResultAveraged.get(i).getMac()).append(",");
                 rssi.append(wifiScanResultAveraged.get(i).getRssi()).append(",");
             }
@@ -191,28 +199,31 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             //向服务器发送WiFi信息,结果由myHandler处理
             boolean updateResult;
             try {
-                updateResult = HttpUtils.updateWifiFingerprint(sceneName, params[0], params[1], mac.toString(), rssi.toString());
+                updateResult = HttpUtils.updateWifiFingerprint
+                        (sceneName, params[0], params[1], mac.toString(), rssi.toString());
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
-                return MainActivity.UNAUTHORIZED;
+                return PositioningResponse.UNAUTHORIZED;
             }
-            if(updateResult)
-                return MainActivity.UPDATE_FP_SUCCEED;
-            else
-                return MainActivity.NETWORK_ERROR;
+            if (updateResult) {
+                return PositioningResponse.UPDATE_FP_SUCCEED;
+            } else {
+                return PositioningResponse.NETWORK_ERROR;
+            }
         }
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            if(values[0] == numberOfAcquision)
+            if (values[0] == numberOfAcquision) {
                 progressDialog.setMessage(getString(R.string.fragment_updateFP_updating));
+            }
             progressDialog.setProgress(values[0]);
         }
         @Override
-        protected void onPostExecute(Integer integer) {
+        protected void onPostExecute(PositioningResponse response) {
             progressDialog.dismiss();
             Message msg = new Message();
-            msg.what = integer;
+            msg.obj = response;
             mActivity.getMyHandler().sendMessage(msg);
         }
 
@@ -221,7 +232,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
      * 更新地磁指纹的异步任务,需要提供当前地点的X,Y坐标
      */
 
-    private class UpdateGeoFPTask extends AsyncTask<Float, Integer, Integer> {
+    private class UpdateGeoFPTask extends AsyncTask<Float, Integer, PositioningResponse> {
         private ProgressDialog progressDialog;
         private String sceneName;
 
@@ -240,11 +251,11 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         }
 
         @Override
-        protected Integer doInBackground(Float... params) {
+        protected PositioningResponse doInBackground(Float... params) {
             //存放采集的地磁指纹信息
             final float[] geomagneticResult = new float[2];
             //进行numberOfAcquision次采集,并更新进度条
-            for(int i = 0; i < numberOfAcquision; ++i) {
+            for (int i = 0; i < numberOfAcquision; ++i) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
@@ -261,28 +272,32 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             //向服务器发送地磁指纹信息,结果由myHandler处理
             boolean updateResult;
             try {
-            updateResult = HttpUtils.updateGeomagneticFingerprint(sceneName, params[0], params[1], geomagneticResult[0], geomagneticResult[1]);
+                updateResult = HttpUtils
+                        .updateGeomagneticFingerprint(sceneName, params[0], params[1],
+                                geomagneticResult[0], geomagneticResult[1]);
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
-                return MainActivity.UNAUTHORIZED;
+                return PositioningResponse.UNAUTHORIZED;
             }
-            if(updateResult)
-                return MainActivity.UPDATE_FP_SUCCEED;
-            else
-                return MainActivity.NETWORK_ERROR;
+            if (updateResult) {
+                return PositioningResponse.UPDATE_FP_SUCCEED;
+            } else {
+                return PositioningResponse.NETWORK_ERROR;
+            }
         }
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            if(values[0] == numberOfAcquision)
+            if (values[0] == numberOfAcquision) {
                 progressDialog.setMessage(getString(R.string.fragment_updateFP_updating));
+            }
             progressDialog.setProgress(values[0]);
         }
         @Override
-        protected void onPostExecute(Integer integer) {
+        protected void onPostExecute(PositioningResponse response) {
             progressDialog.dismiss();
             Message msg = new Message();
-            msg.what = integer;
+            msg.obj = response;
             mActivity.getMyHandler().sendMessage(msg);
         }
 

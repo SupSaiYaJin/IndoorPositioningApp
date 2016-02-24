@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.tools.ActivityCollector;
+import com.saiya.indoorposapp.tools.AuthResponse;
 import com.saiya.indoorposapp.tools.HttpUtils;
 
 import java.lang.ref.WeakReference;
@@ -22,18 +23,6 @@ import java.lang.ref.WeakReference;
  * 用户登录Activity
  */
 public class LoginActivity extends Activity implements View.OnClickListener {
-
-    /** 未知错误 */
-    public static final int UNEXPECTED_ERROR = -1;
-
-    /** 登录成功 */
-    public static final int LOGIN_SUCCEED = 0;
-
-    /** 用户名不存在 */
-    public static final int USERNAME_NOT_EXIST = 1;
-
-    /** 密码错误 */
-    public static final int PASSWORD_ERROR = 2;
 
     private SharedPreferences activityPreferences;
 
@@ -53,23 +42,28 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         //处理登录时返回的消息
         @Override
         public void handleMessage(Message msg) {
-            if(mActivity.get() == null)
+            if (mActivity.get() == null) {
                 return;
-            switch (msg.what) {
+            }
+            switch ((AuthResponse) msg.obj) {
                 case LOGIN_SUCCEED:
                     Intent intent = new Intent(mActivity.get(), MainActivity.class);
-                    intent.putExtra("username", mActivity.get().activityPreferences.getString("lastusername", ""));
+                    intent.putExtra("username", mActivity.get()
+                            .activityPreferences.getString("lastusername", ""));
                     mActivity.get().startActivity(intent);
                     mActivity.get().finish();
                     break;
                 case USERNAME_NOT_EXIST:
-                    Toast.makeText(mActivity.get(), R.string.activity_login_invalidUsername, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.activity_login_invalidUsername,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 case PASSWORD_ERROR:
-                    Toast.makeText(mActivity.get(), R.string.activity_login_invalidPassword, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.activity_login_invalidPassword,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 case UNEXPECTED_ERROR:
-                    Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     break;
@@ -103,12 +97,16 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         /** 上次登录成功的用户名 */
         String lastusername = activityPreferences.getString("lastusername", "");
         //若上次成功登录的用户名不为空,则得到那个用户的SharedPreferences
-        if(!lastusername.equals("")) {
-            SharedPreferences preferences = getSharedPreferences(activityPreferences.getString("lastusername", "default") + "-settings", MODE_PRIVATE);
+        if (!lastusername.equals("")) {
+            SharedPreferences preferences = getSharedPreferences
+                    (activityPreferences.getString("lastusername", "default") + "-settings",
+                    MODE_PRIVATE);
             edtTxt_login_username.setText(preferences.getString("username", ""));
             //查看用户是否开启了自动登录,若开启并且Activity不是由于未鉴权启动,则自动登录一次
-            if(preferences.getBoolean("autoLogin", false) && getIntent().getBooleanExtra("allowedAutoLogin", true))
+            if (preferences.getBoolean("autoLogin", false) &&
+                    getIntent().getBooleanExtra("allowedAutoLogin", true)) {
                 login(preferences.getString("username", ""), preferences.getString("password", ""));
+            }
         }
     }
 
@@ -123,7 +121,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn_login_login:
-                login(edtTxt_login_username.getText().toString(), edtTxt_login_password.getText().toString());
+                login(edtTxt_login_username.getText().toString(),
+                        edtTxt_login_password.getText().toString());
                 break;
             case R.id.btn_login_register:
                 Intent intent = new Intent(this, RegisterActivity.class);
@@ -140,11 +139,11 @@ public class LoginActivity extends Activity implements View.OnClickListener {
      * @param password 密码
      */
     private void login(final String username, final String password) {
-        if(username.length() == 0 || password.length() == 0) {
+        if (username.length() == 0 || password.length() == 0) {
             Toast.makeText(this, R.string.activity_common_invalidInput, Toast.LENGTH_SHORT).show();
             return;
         }
-        if(username.length() > 20 || password.length() > 20) {
+        if (username.length() > 20 || password.length() > 20) {
             Toast.makeText(this, R.string.activity_common_oversizeInput, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -158,8 +157,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             @Override
             public void run() {
                 Message msg = new Message();
-                int loginResult = HttpUtils.login(username, password);
-                if(loginResult == LOGIN_SUCCEED) {
+                AuthResponse loginResult = HttpUtils.login(username, password);
+                if (loginResult == AuthResponse.LOGIN_SUCCEED) {
                     SharedPreferences.Editor editor = activityPreferences.edit();
                     editor.putString("lastusername", username);
                     editor.apply();
@@ -168,7 +167,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                     editor.putString("password", password);
                     editor.apply();
                 }
-                msg.what = loginResult;
+                msg.obj = loginResult;
                 myHandler.sendMessage(msg);
                 progressDialog.dismiss();
             }

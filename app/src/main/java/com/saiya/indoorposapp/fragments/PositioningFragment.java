@@ -18,13 +18,15 @@ import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.MainActivity;
+import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
+import com.saiya.indoorposapp.tools.PositioningResponse;
 import com.saiya.indoorposapp.tools.PreferencessHelper;
 import com.saiya.indoorposapp.ui.MapView;
 
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -68,19 +70,30 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                 @Override
                 public void run() {
                     String[] wifiData = mActivity.getWifiScanResult(mNumberOfAP);
+                    //若WiFi关闭,结束定位,并报网络错误
+                    if (wifiData == null) {
+                        isRunning = false;
+                        mHandler.removeCallbacks(mLocateRunnable);
+                        Message msg = new Message();
+                        msg.obj = PositioningResponse.NETWORK_ERROR;
+                        mActivity.getMyHandler().sendMessage(msg);
+                        return;
+                    }
                     String mac = wifiData[0];
                     String rssi = wifiData[1];
                     float[] MagneticRSS = mActivity.getGeomagneticRSS();
                     try {
                         switch (mLocationMethod) {
                             case USE_ALL_METHOD:
-                                result = HttpUtils.locateOnBoth(mSceneName, mac, rssi, MagneticRSS[0], MagneticRSS[1]);
+                                result = HttpUtils.locateOnBoth(mSceneName, mac, rssi,
+                                        MagneticRSS[0], MagneticRSS[1]);
                                 break;
                             case USE_WIFI_ONLY:
                                 result = HttpUtils.locateOnWifi(mSceneName, mac, rssi);
                                 break;
                             case USE_GEOMAGNETIC_ONLY:
-                                result = HttpUtils.locateOnGeomagnetic(mSceneName, MagneticRSS[0], MagneticRSS[1]);
+                                result = HttpUtils.locateOnGeomagnetic(mSceneName,
+                                        MagneticRSS[0], MagneticRSS[1]);
                                 break;
                             default:
                                 break;
@@ -90,14 +103,14 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                         isRunning = false;
                         mHandler.removeCallbacks(mLocateRunnable);
                         Message msg = new Message();
-                        msg.what = MainActivity.UNAUTHORIZED;
+                        msg.obj = PositioningResponse.UNAUTHORIZED;
                         mActivity.getMyHandler().sendMessage(msg);
                     }
-                    if(result[0] == -1 || result[1] == -1) {
+                    if (result[0] == -1 || result[1] == -1) {
                         isRunning = false;
                         mHandler.removeCallbacks(mLocateRunnable);
                         Message msg = new Message();
-                        msg.what = MainActivity.NETWORK_ERROR;
+                        msg.obj = PositioningResponse.NETWORK_ERROR;
                         mActivity.getMyHandler().sendMessage(msg);
                     }
                     mv_positioning_map.setIndicator(result[0], result[1], false);
@@ -145,7 +158,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         preferences =  mActivity.getPreferences();
         mLocationMethod = preferences.getLocationMethod();
         mLocationInterval = preferences.getLocationInterval();
-        mNumberOfAP = preferences.getNumberOfWifiAP();
+        mNumberOfAP = preferences.getNumberOfWifiAp();
         Button btn_positioning_start = (Button) mActivity.findViewById(R.id.btn_positioning_start);
         Button btn_positioning_stop = (Button) mActivity.findViewById(R.id.btn_positioning_stop);
         Button btn_positioning_switch = (Button) mActivity.findViewById(R.id.btn_positioning_switch);
@@ -154,32 +167,37 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         btn_positioning_switch.setOnClickListener(this);
         mSceneName = preferences.getLastSceneName();
         mMapScale = preferences.getLastSceneScale();
-        if(mSceneName != null && mMapScale != 0f)
-            setMap();
+        if (mSceneName != null && mMapScale != 0f) {
+            setMap(mSceneName, 0);
+        }
     }
 
     /**
      * 设置显示的地图
      */
-    private void setMap() {
-        //若开启了自动更新地图,则直接从服务器重新下载地图文件
-        if(preferences.getAutoUpdateMap()) {
-            new DownloadMapTask().execute(mSceneName);
-        }
-        //若未开启自动更新地图,则使用缓存在本地的地图文件,若本地文件有问题则从服务器重新下载文件
-        else {
-            try (FileInputStream in = mActivity.openFileInput(mSceneName + ".jpg")){
-                Bitmap map = BitmapFactory.decodeStream(in);
-                if(map == null) {
-                    new DownloadMapTask().execute(mSceneName);
-                    return;
+    private void setMap(String sceneName, long lastUpdateTime) {
+        //对应地图文件的File对象
+        File mapFile = new File(mActivity.getFilesDir(), sceneName + ".jpg");
+        //若文件不存在,则下载地图
+        if (!mapFile.exists()) {
+            new DownloadMapTask().execute(sceneName);
+        } else {
+            //若开启了自动更新地图,且服务器的地图较新,则下载地图
+            if (preferences.getAutoUpdateMap() && mapFile.lastModified() < lastUpdateTime) {
+                new DownloadMapTask().execute(sceneName);
+            //否则直接读入本地地图文件
+            } else {
+                try (FileInputStream in = new FileInputStream(mapFile)){
+                    Bitmap map = BitmapFactory.decodeStream(in);
+                    //若无法解析地图文件,重新下载地图
+                    if (map == null) {
+                        new DownloadMapTask().execute(sceneName);
+                        return;
+                    }
+                    mv_positioning_map.setMap(map, mMapScale);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                mv_positioning_map.setMap(map, mMapScale);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                new DownloadMapTask().execute(mSceneName);
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
@@ -205,8 +223,12 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      * 开始定位
      */
     private void startLocation() {
+        if (!mActivity.checkWifiState()) {
+            Toast.makeText(mActivity, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
+            return;
+        }
         Toast.makeText(mActivity, R.string.fragment_positioning_positioningStarted, Toast.LENGTH_SHORT).show();
-        if(!isRunning) {
+        if (!isRunning) {
             isRunning = true;
             mHandler.post(mLocateRunnable);
         }
@@ -225,25 +247,26 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      * 切换场景
      */
     private void switchScene() {
-        if(!isRunning)
-            new MainActivity.ChooseSceneTask((MainActivity)mActivity){
+        if (!isRunning) {
+            mActivity.new ChooseSceneTask(new MainActivity.OnChooseSceneListener() {
                 @Override
-                protected void onChooseScene(String sceneName, float mapScale) {
-                    preferences.setLastSceneName(sceneName);
-                    preferences.setLastSceneScale(mapScale);
-                    mSceneName = sceneName;
-                    mMapScale = mapScale;
-                    setMap();
+                public void onChooseScene(SceneInfo sceneInfo) {
+                    preferences.setLastSceneName(sceneInfo.getSceneName());
+                    preferences.setLastSceneScale(sceneInfo.getScale());
+                    mSceneName = sceneInfo.getSceneName();
+                    mMapScale = sceneInfo.getScale();
+                    setMap(sceneInfo.getSceneName(), sceneInfo.getLastUpdateTime());
+
                 }
-            }.execute();
-        else
-            Toast.makeText(mActivity, R.string.fragment_positioning_positioningRunning, Toast
-                    .LENGTH_SHORT).show();
+            }).execute();
+        } else {
+            Toast.makeText(mActivity, R.string.fragment_positioning_positioningRunning, Toast.LENGTH_SHORT).show();
+        }
     }
     /**
      * 下载地图的异步任务
      */
-    private class DownloadMapTask extends AsyncTask<String, Void, Integer> {
+    private class DownloadMapTask extends AsyncTask<String, Void, PositioningResponse> {
 
         private ProgressDialog mProgressDialog;
         private byte[] mapBytes;
@@ -259,31 +282,37 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         }
 
         @Override
-        protected Integer doInBackground(String... params) {
-            try (FileOutputStream out = mActivity.openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE)){
+        protected PositioningResponse doInBackground(String... params) {
+            try (FileOutputStream out = mActivity
+                    .openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE)){
                 mapBytes = HttpUtils.downloadMap(params[0]);
-                if(mapBytes == null)
-                    return MainActivity.NETWORK_ERROR;
+                if (mapBytes == null) {
+                    return PositioningResponse.NETWORK_ERROR;
+                }
                 out.write(mapBytes);
                 out.flush();
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
-                return MainActivity.UNAUTHORIZED;
+                return PositioningResponse.UNAUTHORIZED;
             } catch (IOException e) {
                 e.printStackTrace();
-                return MainActivity.NETWORK_ERROR;
+                return PositioningResponse.NETWORK_ERROR;
             }
-            return MainActivity.DOWNLOAD_MAP_SUCCEED;
+            return PositioningResponse.DOWNLOAD_MAP_SUCCEED;
         }
 
         @Override
-        protected void onPostExecute(Integer integer) {
+        protected void onPostExecute(PositioningResponse response) {
             mProgressDialog.dismiss();
             Message msg = new Message();
-            msg.what = integer;
-            if(integer == MainActivity.DOWNLOAD_MAP_SUCCEED) {
+            msg.obj = response;
+            if (response == PositioningResponse.DOWNLOAD_MAP_SUCCEED) {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
-                mv_positioning_map.setMap(bitmap, mMapScale);
+                if (bitmap != null) {
+                    mv_positioning_map.setMap(bitmap, mMapScale);
+                } else {
+                    msg.obj = PositioningResponse.NETWORK_ERROR;
+                }
             }
             mActivity.getMyHandler().sendMessage(msg);
         }

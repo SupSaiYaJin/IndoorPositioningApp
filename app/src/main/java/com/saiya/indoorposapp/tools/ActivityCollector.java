@@ -33,9 +33,10 @@ public class ActivityCollector {
      * 结束所有List中的Activity实例
      */
     public static void finishAll() {
-        for(Activity activity : activities) {
-            if(!activity.isFinishing())
+        for (Activity activity : activities) {
+            if (!activity.isFinishing()) {
                 activity.finish();
+            }
         }
     }
 }

@@ -32,6 +32,7 @@ import com.saiya.indoorposapp.fragments.UpdateFPFragment;
 import com.saiya.indoorposapp.fragments.UpdateMapFragment;
 import com.saiya.indoorposapp.tools.ActivityCollector;
 import com.saiya.indoorposapp.tools.HttpUtils;
+import com.saiya.indoorposapp.tools.PositioningResponse;
 import com.saiya.indoorposapp.tools.PreferencessHelper;
 import com.saiya.indoorposapp.ui.BottomTabView;
 import com.saiya.indoorposapp.ui.MyViewPager;
@@ -40,23 +41,14 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  * 主Activity,包含定位,更新指纹,更新地图,设置四个页面Fragment
  */
-public class MainActivity extends FragmentActivity implements OnPageChangeListener, OnClickListener, SensorEventListener{
-
-    /** 账户过期的消息代号 */
-    public static final int UNAUTHORIZED = -1;
-    /** 网络错误的消息代号 */
-    public static final int NETWORK_ERROR = 0;
-    /** 更新指纹数据成功的消息代号 */
-    public static final int UPDATE_FP_SUCCEED = 1;
-    /** 更新地图成功的消息代号 */
-    public static final int UPDATE_MAP_SUCCEED = 2;
-    /** 下载地图成功的消息代号 */
-    public static final int DOWNLOAD_MAP_SUCCEED = 3;
+public class MainActivity extends FragmentActivity
+        implements OnPageChangeListener, OnClickListener, SensorEventListener{
 
     //用于显示Fragment
     private MyViewPager vp_main_pager;
@@ -88,8 +80,12 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
         return myHandler;
     }
 
-    public Fragment getFragment(int which) {
-        return mTabs.get(which);
+    public PositioningFragment getPositioningFragment() {
+        return (PositioningFragment) mTabs.get(0);
+    }
+
+    public UpdateFPFragment getUpdateFPFragment() {
+        return (UpdateFPFragment) mTabs.get(1);
     }
 
     //用于在子线程更新UI的MyHandler类
@@ -104,27 +100,29 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
         //处理更新指纹数据时返回的消息
         @Override
         public void handleMessage(Message msg) {
-            if(mActivity.get() == null)
+            if (mActivity.get() == null) {
                 return;
-            switch (msg.what) {
-                case MainActivity.UNAUTHORIZED:
+            }
+            switch ((PositioningResponse) msg.obj) {
+                case UNAUTHORIZED:
                     Intent intent = new Intent("com.saiya.indoorposapp.FORCE_OFFLINE");
                     mActivity.get().sendBroadcast(intent);
                     break;
-                case MainActivity.NETWORK_ERROR:
-                    Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError, Toast.LENGTH_SHORT).show();
+                case NETWORK_ERROR:
+                    Toast.makeText(mActivity.get(), R.string.activity_common_unexpectedError,
+                            Toast.LENGTH_SHORT).show();
                     break;
-                case MainActivity.UPDATE_FP_SUCCEED:
-                    Toast.makeText(mActivity.get(), R.string.fragment_updateFP_updateSucceed, Toast
-                            .LENGTH_SHORT).show();
+                case UPDATE_FP_SUCCEED:
+                    Toast.makeText(mActivity.get(), R.string.fragment_updateFP_updateSucceed,
+                            Toast.LENGTH_SHORT).show();
                     break;
-                case MainActivity.UPDATE_MAP_SUCCEED:
-                    Toast.makeText(mActivity.get(), R.string.fragment_updateMap_updateSucceed, Toast
-                            .LENGTH_SHORT).show();
+                case UPDATE_MAP_SUCCEED:
+                    Toast.makeText(mActivity.get(), R.string.fragment_updateMap_updateSucceed,
+                            Toast.LENGTH_SHORT).show();
                     break;
-                case MainActivity.DOWNLOAD_MAP_SUCCEED:
-                    Toast.makeText(mActivity.get(), R.string.fragment_positioning_downloadMapSucceed, Toast
-                            .LENGTH_SHORT).show();
+                case DOWNLOAD_MAP_SUCCEED:
+                    Toast.makeText(mActivity.get(), R.string.fragment_positioning_downloadMapSucceed,
+                            Toast.LENGTH_SHORT).show();
                     break;
                 default:
                     break;
@@ -134,24 +132,31 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     /**
+     * 封装选择场景时发生的事件
+     */
+    public interface OnChooseSceneListener {
+        void onChooseScene(SceneInfo sceneInfo);
+    }
+
+    /**
      * 选择场景的异步任务类
      */
-    public static class ChooseSceneTask extends AsyncTask<Void, Void, String[]> {
+    public class ChooseSceneTask extends AsyncTask<Void, Void, String[]> {
 
         private ProgressDialog mProgressDialog;
-        private MainActivity mActivity;
         private List<SceneInfo> mSceneList;
+        private OnChooseSceneListener mlistener;
 
-        public ChooseSceneTask(MainActivity activity) {
-            mActivity = activity;
+        public ChooseSceneTask(OnChooseSceneListener listener) {
+            mlistener = listener;
         }
 
         @Override
         protected void onPreExecute() {
             //创建一个进度条对话框
-            mProgressDialog = new ProgressDialog(mActivity);
+            mProgressDialog = new ProgressDialog(MainActivity.this);
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.setMessage(mActivity.getString(R.string.fragment_updateFP_gettingList));
+            mProgressDialog.setMessage(MainActivity.this.getString(R.string.fragment_updateFP_gettingList));
             mProgressDialog.setCancelable(false);
             mProgressDialog.setCanceledOnTouchOutside(false);
             mProgressDialog.show();
@@ -161,14 +166,14 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
         protected String[] doInBackground(Void... params) {
             try {
                 mSceneList = HttpUtils.getSceneList();
-                if(mSceneList == null || mSceneList.size() == 0) {
+                if (mSceneList == null || mSceneList.size() == 0) {
                     Message msg = new Message();
-                    msg.what = NETWORK_ERROR;
-                    mActivity.getMyHandler().sendMessage(msg);
+                    msg.obj = PositioningResponse.NETWORK_ERROR;
+                    MainActivity.this.getMyHandler().sendMessage(msg);
                 }
                 else {
                     String[] sceneListArray = new String[mSceneList.size()];
-                    for(int i = 0; i < mSceneList.size(); ++i) {
+                    for (int i = 0; i < mSceneList.size(); ++i) {
                         sceneListArray[i] = mSceneList.get(i).getSceneName();
                     }
                     return sceneListArray;
@@ -176,8 +181,8 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
                 Message msg = new Message();
-                msg.what = UNAUTHORIZED;
-                mActivity.getMyHandler().sendMessage(msg);
+                msg.obj = PositioningResponse.UNAUTHORIZED;
+                MainActivity.this.getMyHandler().sendMessage(msg);
             }
             return null;
         }
@@ -185,8 +190,9 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
         @Override
         protected void onPostExecute(String[] strings) {
             mProgressDialog.dismiss();
-            if(strings == null)
+            if (strings == null) {
                 return;
+            }
             DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
 
                 /** 记录被选择的单选项序号,初始化为-1,表示未选择 */
@@ -195,30 +201,30 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     //若点确定按钮,做对应的操作
-                    if(which == AlertDialog.BUTTON_POSITIVE) {
-                        if(mSelectedWhich != -1)
-                            onChooseScene(mSceneList.get(mSelectedWhich).getSceneName(), mSceneList.get(mSelectedWhich).getScale());
-                    }
+                    if (which == AlertDialog.BUTTON_POSITIVE) {
+                        if (mSelectedWhich != -1) {
+                            SceneInfo sceneInfo = mSceneList.get(mSelectedWhich);
+                            if (mlistener != null) {
+                                mlistener.onChooseScene(sceneInfo);
+                            }
+                        }
                     //若点击单选项,仅改变mSelectedWhich的值
-                    else
+                    } else {
                         mSelectedWhich = which;
+                    }
                 }
             };
-            AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle(R.string.fragment_updateMap_chooseSceneName);
             builder.setSingleChoiceItems(strings, -1, onClickListener);
             builder.setPositiveButton(R.string.fragment_settings_confirm, onClickListener);
             builder.show();
         }
 
-        protected void onChooseScene(String sceneName, float mapScale) {
-
-        }
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initView();
@@ -242,10 +248,10 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     @Override
     protected void onResume() {
         super.onResume();
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor
-                .TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor
-                .TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mSensorManager
+                .getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, mSensorManager
+                .getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), SensorManager.SENSOR_DELAY_UI);
     }
 
     @Override
@@ -283,10 +289,10 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
 
     }
 
-    private void initTabIndicator()
-    {
+    private void initTabIndicator() {
         BottomTabView btv_main_positioning = (BottomTabView) findViewById(R.id.btv_main_positioning);
-        BottomTabView btn_main_undatefingerprint = (BottomTabView) findViewById(R.id.btv_main_updatefingerprint);
+        BottomTabView btn_main_undatefingerprint =
+                (BottomTabView) findViewById(R.id.btv_main_updatefingerprint);
         BottomTabView btv_main_updatemap = (BottomTabView) findViewById(R.id.btv_main_updatemap);
         BottomTabView btv_main_settings = (BottomTabView) findViewById(R.id.btv_main_settings);
 
@@ -304,18 +310,14 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     @Override
-    public void onPageSelected(int arg0)
-    {
+    public void onPageSelected(int arg0) {
 
     }
 
     @Override
-    public void onPageScrolled(int position, float positionOffset,
-                               int positionOffsetPixels)
-    {
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
-        if (positionOffset > 0)
-        {
+        if (positionOffset > 0) {
             BottomTabView left = mTabIndicator.get(position);
             BottomTabView right = mTabIndicator.get(position + 1);
             left.setIconAlpha(1 - positionOffset);
@@ -325,18 +327,15 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     @Override
-    public void onPageScrollStateChanged(int state)
-    {
+    public void onPageScrollStateChanged(int state) {
 
     }
 
     /**
      * 重置其他的Tab
      */
-    private void resetOtherTabs()
-    {
-        for (int i = 0; i < mTabIndicator.size(); i++)
-        {
+    private void resetOtherTabs() {
+        for (int i = 0; i < mTabIndicator.size(); i++) {
             mTabIndicator.get(i).setIconAlpha(0);
         }
     }
@@ -379,12 +378,10 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     @Override
-    public void onClick(View v)
-    {
+    public void onClick(View v) {
 
         resetOtherTabs();
-        switch (v.getId())
-        {
+        switch (v.getId()) {
             case R.id.btv_main_positioning:
                 mTabIndicator.get(0).setIconAlpha(1.0f);
                 vp_main_pager.setCurrentItem(0, false);
@@ -407,13 +404,22 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
     }
 
     /**
+     * 检查WiFi状态
+     * @return WiFi开启则返回true
+     */
+    public boolean checkWifiState() {
+        return mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED;
+    }
+    private String[] wifiScanResultOfN = new String[2];
+    /**
      * 获取信号强度最强的前n个WiFi信息
      * @param n 指定获取WiFi信息的最大个数,
-     * @return 返回Bundle,其中mac字段存储了MAC地址,rssi字段存储了RSSI数据,都为用逗号拼接的String.若WiFi未打开返回null.
+     * @return 返回Bundle,其中mac字段存储了MAC地址,rssi字段存储了RSSI数据,都是用逗号拼接的String.
+     * 若WiFi未打开返回null.
      */
     public String[] getWifiScanResult(int n) {
-        if(mWifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-            Toast.makeText(this, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
+        //若未开WiFi返回null
+        if (!checkWifiState()) {
             return null;
         }
         mWifiManager.startScan();
@@ -431,30 +437,33 @@ public class MainActivity extends FragmentActivity implements OnPageChangeListen
         });
         StringBuilder mac = new StringBuilder();
         StringBuilder rssi = new StringBuilder();
-        for(int i = 0; i < n && i < scanResultList.size(); ++i) {
+        for (int i = 0; i < n && i < scanResultList.size(); ++i) {
             mac.append(scanResultList.get(i).BSSID).append(",");
             rssi.append(scanResultList.get(i).level).append(",");
         }
         mac.deleteCharAt(mac.length() - 1);
         rssi.deleteCharAt(rssi.length() - 1);
-        return new String[]{mac.toString(), rssi.toString()};
+        wifiScanResultOfN[0] = mac.toString();
+        wifiScanResultOfN[1] = rssi.toString();
+        return wifiScanResultOfN;
     }
 
+    List<WifiFingerprint> allWifiScanResult = new LinkedList<>();
     /**
      * 获取所有WiFi信号信息,String为MAC地址,Float为信号强度
      * @return 返回存储了WiFi信号信息的Map
      */
     public List<WifiFingerprint> getWifiScanResult() {
-        if(mWifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
-            Toast.makeText(this, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
+        allWifiScanResult.clear();
+        if (!checkWifiState()) {
             return null;
         }
         mWifiManager.startScan();
         List<ScanResult> scanResultList = mWifiManager.getScanResults();
-        List<WifiFingerprint> result = new ArrayList<>();
-        for(ScanResult scanResult : scanResultList)
-            result.add(new WifiFingerprint(scanResult.BSSID, (float) scanResult.level));
-        return result;
+        for (ScanResult scanResult : scanResultList) {
+            allWifiScanResult.add(new WifiFingerprint(scanResult.BSSID, (float) scanResult.level));
+        }
+        return allWifiScanResult;
     }
 
     public float[] getGeomagneticRSS() {

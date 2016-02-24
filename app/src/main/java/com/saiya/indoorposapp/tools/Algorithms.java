@@ -17,18 +17,21 @@ public class Algorithms {
      * @param end 终止位置
      * @param K 需要的个数
      */
-    public static void findKStrongestRSSI(List<WifiFingerprint> rssiList, int start, int
-            end, int K) {
-        if(end - start + 1 < K)
+    public static void findKStrongestRSSI(List<WifiFingerprint> rssiList,
+            int start, int end, int K) {
+        if (end - start + 1 < K) {
             return;
-        if(start < end) {
+        }
+        if (start < end) {
             int mid = partition(rssiList, start, end);
-            if(mid - start + 1 == K)
+            if (mid - start + 1 == K) {
                 return;
-            if(mid - start + 1 > K)
+            }
+            if (mid - start + 1 > K) {
                 findKStrongestRSSI(rssiList, start, mid - 1, K);
-            else
+            } else {
                 findKStrongestRSSI(rssiList, mid + 1, end, K - (mid - start + 1));
+            }
         }
     }
 
@@ -43,7 +46,7 @@ public class Algorithms {
         float key = rssiList.get(end).getRssi();
         int result = start;
         for(int i = start; i < end; ++i) {
-            if(rssiList.get(i).getRssi() > key) {
+            if (rssiList.get(i).getRssi() > key) {
                 Collections.swap(rssiList, result, i);
                 ++result;
             }

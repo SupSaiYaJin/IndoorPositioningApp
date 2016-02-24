@@ -19,8 +19,10 @@ import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.MainActivity;
+import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
+import com.saiya.indoorposapp.tools.PositioningResponse;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -54,28 +56,33 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
      */
     private void initView() {
         mActivity = (MainActivity)getActivity();
-        edtTxt_updateMap_sceneName = (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_sceneName);
+        edtTxt_updateMap_sceneName =
+                (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_sceneName);
         edtTxt_updateMap_scale = (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_scale);
-        edtTxt_updateMap_filePath = (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_filePath);
-        Button btn_updateMap_chooseSceneName = (Button) mActivity.findViewById(R.id.btn_updateMap_chooseSceneName);
-        Button btn_updateMap_chooseFile = (Button) mActivity.findViewById(R.id.btn_updateMap_chooseFile);
+        edtTxt_updateMap_filePath =
+                (EditText) mActivity.findViewById(R.id.edtTxt_updateMap_filePath);
+        Button btn_updateMap_chooseSceneName =
+                (Button) mActivity.findViewById(R.id.btn_updateMap_chooseSceneName);
+        Button btn_updateMap_chooseFile =
+                (Button) mActivity.findViewById(R.id.btn_updateMap_chooseFile);
         Button btn_updateMap_confirm = (Button) mActivity.findViewById(R.id.btn_updateMap_confirm);
         btn_updateMap_chooseSceneName.setOnClickListener(this);
         btn_updateMap_chooseFile.setOnClickListener(this);
         btn_updateMap_confirm.setOnClickListener(this);
         edtTxt_updateMap_sceneName.setText(R.string.activity_main_defaultScene);
+        progressDialog = new ProgressDialog(mActivity);
     }
 
     /**
      * 点击选择场景后触发的事件
      */
     private void chooseSceneNameOnClick() {
-        new MainActivity.ChooseSceneTask(mActivity) {
+        mActivity. new ChooseSceneTask(new MainActivity.OnChooseSceneListener() {
             @Override
-            protected void onChooseScene(String sceneName, float mapScale) {
-                edtTxt_updateMap_sceneName.setText(sceneName);
+            public void onChooseScene(SceneInfo sceneInfo) {
+                edtTxt_updateMap_sceneName.setText(sceneInfo.getSceneName());
             }
-        }.execute();
+        }).execute();
     }
 
     /**
@@ -88,6 +95,8 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         startActivityForResult(intent, 1);
     }
 
+    //创建一个进度条对话框
+    private ProgressDialog progressDialog;
     /**
      * 点击上传地图后触发的事件
      */
@@ -97,16 +106,17 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         String scaleStr = edtTxt_updateMap_scale.getText().toString();
         String filePath = edtTxt_updateMap_filePath.getText().toString();
         //检查参数是否合法
-        if(sceneName.equals(getString(R.string.activity_main_defaultScene)) || sceneName.length() == 0 || filePath.length() == 0) {
+        if (sceneName.equals(getString(R.string.activity_main_defaultScene)) || sceneName.length() == 0 || filePath.length() == 0) {
             Toast.makeText(mActivity, R.string.fragment_updateMap_confirmFailed, Toast.LENGTH_SHORT).show();
             return;
         }
         //将比例尺转为float
         final float scale;
-        if(scaleStr.length() != 0)
+        if (scaleStr.length() != 0) {
             scale = Float.parseFloat(scaleStr);
-        else
+        } else {
             scale = 0;
+        }
         //读取图片文件到byte[]数组mapBytes
         File file = new File(filePath);
         final byte[] mapBytes;
@@ -124,8 +134,6 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
             Toast.makeText(mActivity, R.string.fragment_updateMap_streamFailed, Toast.LENGTH_SHORT).show();
             return;
         }
-        //创建一个进度条对话框
-        final ProgressDialog progressDialog = new ProgressDialog(mActivity);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.setMessage(getString(R.string.fragment_updateMap_updating));
         progressDialog.setCancelable(false);
@@ -137,20 +145,19 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
                 boolean uploadResult;
                 try {
                     uploadResult = HttpUtils.uploadMap(sceneName, scale, mapBytes);
-                    if(uploadResult) {
+                    if (uploadResult) {
                         Message msg = new Message();
-                        msg.what = MainActivity.UPDATE_MAP_SUCCEED;
+                        msg.obj = PositioningResponse.UPDATE_MAP_SUCCEED;
                         mActivity.getMyHandler().sendMessage(msg);
-                    }
-                    else {
+                    } else {
                         Message msg = new Message();
-                        msg.what = MainActivity.NETWORK_ERROR;
+                        msg.obj = PositioningResponse.NETWORK_ERROR;
                         mActivity.getMyHandler().sendMessage(msg);
                     }
                 } catch (UnauthorizedException e) {
                     e.printStackTrace();
                     Message msg = new Message();
-                    msg.what = MainActivity.UNAUTHORIZED;
+                    msg.obj = PositioningResponse.UNAUTHORIZED;
                     mActivity.getMyHandler().sendMessage(msg);
                 } finally {
                     progressDialog.dismiss();
@@ -179,7 +186,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(resultCode == Activity.RESULT_OK) {
+        if (resultCode == Activity.RESULT_OK) {
             switch(requestCode) {
                 case 1:
                     Uri uri = data.getData();
@@ -190,15 +197,15 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
                         //获取图片的位置
                         edtTxt_updateMap_filePath.setText(c.getString(c.getColumnIndex("_data")));
                         c.close();
-                    }
-                    else
+                    } else {
                         Toast.makeText(mActivity, R.string.fragment_updateMap_chooseFileFailed, Toast.LENGTH_SHORT).show();
+                    }
                     break;
                 default:
                     break;
             }
-        }
-        else
+        } else {
             Toast.makeText(mActivity, R.string.fragment_updateMap_chooseFileFailed, Toast.LENGTH_SHORT).show();
+        }
     }
 }
