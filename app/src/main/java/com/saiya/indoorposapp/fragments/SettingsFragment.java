@@ -196,7 +196,7 @@ public class SettingsFragment extends Fragment
             int locationInterval = preferences.getLocationInterval();
             int oriIndex = locationInterval / LOCATION_INTERVAL_MIN - 1;
             int[] values = new int[5];
-            for(int i = 0; i < values.length; ++i) {
+            for (int i = 0; i < values.length; ++i) {
                 values[i] = (i + 1) * LOCATION_INTERVAL_MIN;
             }
             locationIntervalDialog = new SeekbarSettingDialog(mActivity);
@@ -247,7 +247,7 @@ public class SettingsFragment extends Fragment
             int numberOfAquisition = preferences.getNumberOfAcquisition();
             int oriIndex = numberOfAquisition / NUMBER_OF_ACQUISITION_MIN - 1;
             int[] values = new int[5];
-            for(int i = 0; i < values.length; ++i) {
+            for (int i = 0; i < values.length; ++i) {
                 values[i] = (i + 1) * NUMBER_OF_ACQUISITION_MIN;
             }
             numOfAcquisitionDialog = new SeekbarSettingDialog(mActivity);

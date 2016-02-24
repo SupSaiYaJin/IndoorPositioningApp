@@ -248,8 +248,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      */
     private void switchScene() {
         if (!isRunning) {
-            new MainActivity.ChooseSceneTask(mActivity,
-                    new MainActivity.ChooseSceneTask.OnChooseSceneListener() {
+            mActivity.new ChooseSceneTask(new MainActivity.OnChooseSceneListener() {
                 @Override
                 public void onChooseScene(SceneInfo sceneInfo) {
                     preferences.setLastSceneName(sceneInfo.getSceneName());

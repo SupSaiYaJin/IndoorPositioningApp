@@ -89,8 +89,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.rl_updateFP_sceneName) {
-            new MainActivity.ChooseSceneTask(mActivity,
-                    new MainActivity.ChooseSceneTask.OnChooseSceneListener() {
+            mActivity.new ChooseSceneTask(new MainActivity.OnChooseSceneListener() {
                         @Override
                         public void onChooseScene(SceneInfo sceneInfo) {
                             tv_updateFP_sceneName.setText(sceneInfo.getSceneName());
@@ -154,13 +153,13 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             /** 存储所有WiFi强度信息,String为MAC地址,float数组第一位为多次RSS值的和,第二位为扫描到的次数 */
             Map<String, float[]> wifiScanResultSum = new HashMap<>();
             //进行numberOfAcquision次采集,并更新进度条
-            for(int i = 0; i < numberOfAcquision; ++i) {
+            for (int i = 0; i < numberOfAcquision; ++i) {
                 publishProgress(i + 1);
                 List<WifiFingerprint> wifiScanResult = mActivity.getWifiScanResult();
                 if (wifiScanResult == null) {
                     return PositioningResponse.NETWORK_ERROR;
                 }
-                for(WifiFingerprint wifiFingerprint : wifiScanResult) {
+                for (WifiFingerprint wifiFingerprint : wifiScanResult) {
                     String mac = wifiFingerprint.getMac();
                     float rssi = wifiFingerprint.getRssi();
                     if (wifiScanResultSum.containsKey(mac)) {
@@ -182,7 +181,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             /** 存储平均后的扫描结果 */
             List<WifiFingerprint> wifiScanResultAveraged = new ArrayList<>();
             //将WiFi扫描结果取平均
-            for(Map.Entry<String, float[]> entry : wifiScanResultSum.entrySet())
+            for (Map.Entry<String, float[]> entry : wifiScanResultSum.entrySet())
                 wifiScanResultAveraged.add(new WifiFingerprint
                         (entry.getKey(), entry.getValue()[0] / entry.getValue()[1]));
             //将WiFi扫描结果的前N强的信息取出
@@ -191,7 +190,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             //将WiFi扫描结果转为String以发送到服务器
             StringBuilder mac = new StringBuilder();
             StringBuilder rssi = new StringBuilder();
-            for(int i = 0; i < NUMBER_OF_UPDATE_WIFIAP && i < wifiScanResultAveraged.size(); ++i) {
+            for (int i = 0; i < NUMBER_OF_UPDATE_WIFIAP && i < wifiScanResultAveraged.size(); ++i) {
                 mac.append(wifiScanResultAveraged.get(i).getMac()).append(",");
                 rssi.append(wifiScanResultAveraged.get(i).getRssi()).append(",");
             }
@@ -256,7 +255,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             //存放采集的地磁指纹信息
             final float[] geomagneticResult = new float[2];
             //进行numberOfAcquision次采集,并更新进度条
-            for(int i = 0; i < numberOfAcquision; ++i) {
+            for (int i = 0; i < numberOfAcquision; ++i) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {

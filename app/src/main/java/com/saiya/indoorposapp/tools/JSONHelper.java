@@ -59,7 +59,7 @@ public class JSONHelper {
         try {
             JSONObject jsonObject = new JSONObject(jsonResponse);
             JSONArray jsonArray = jsonObject.getJSONArray("maps");
-            for(int i = 0; i < jsonArray.length(); ++i) {
+            for (int i = 0; i < jsonArray.length(); ++i) {
                 JSONObject mapInfo = jsonArray.getJSONObject(i);
                 result.add(new SceneInfo(mapInfo.getString("sceneName"),
                         (float) mapInfo.getDouble("scale"), mapInfo.getLong("lastUpdateTime")));

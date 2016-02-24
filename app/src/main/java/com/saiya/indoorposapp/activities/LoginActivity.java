@@ -42,7 +42,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         //处理登录时返回的消息
         @Override
         public void handleMessage(Message msg) {
-            if(mActivity.get() == null) {
+            if (mActivity.get() == null) {
                 return;
             }
             switch ((AuthResponse) msg.obj) {
@@ -97,13 +97,13 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         /** 上次登录成功的用户名 */
         String lastusername = activityPreferences.getString("lastusername", "");
         //若上次成功登录的用户名不为空,则得到那个用户的SharedPreferences
-        if(!lastusername.equals("")) {
+        if (!lastusername.equals("")) {
             SharedPreferences preferences = getSharedPreferences
                     (activityPreferences.getString("lastusername", "default") + "-settings",
                     MODE_PRIVATE);
             edtTxt_login_username.setText(preferences.getString("username", ""));
             //查看用户是否开启了自动登录,若开启并且Activity不是由于未鉴权启动,则自动登录一次
-            if(preferences.getBoolean("autoLogin", false) &&
+            if (preferences.getBoolean("autoLogin", false) &&
                     getIntent().getBooleanExtra("allowedAutoLogin", true)) {
                 login(preferences.getString("username", ""), preferences.getString("password", ""));
             }
@@ -139,11 +139,11 @@ public class LoginActivity extends Activity implements View.OnClickListener {
      * @param password 密码
      */
     private void login(final String username, final String password) {
-        if(username.length() == 0 || password.length() == 0) {
+        if (username.length() == 0 || password.length() == 0) {
             Toast.makeText(this, R.string.activity_common_invalidInput, Toast.LENGTH_SHORT).show();
             return;
         }
-        if(username.length() > 20 || password.length() > 20) {
+        if (username.length() > 20 || password.length() > 20) {
             Toast.makeText(this, R.string.activity_common_oversizeInput, Toast.LENGTH_SHORT).show();
             return;
         }
@@ -158,7 +158,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             public void run() {
                 Message msg = new Message();
                 AuthResponse loginResult = HttpUtils.login(username, password);
-                if(loginResult == AuthResponse.LOGIN_SUCCEED) {
+                if (loginResult == AuthResponse.LOGIN_SUCCEED) {
                     SharedPreferences.Editor editor = activityPreferences.edit();
                     editor.putString("lastusername", username);
                     editor.apply();

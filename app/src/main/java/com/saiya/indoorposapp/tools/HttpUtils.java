@@ -60,7 +60,7 @@ public class HttpUtils {
         //若有请求参数,将它按格式拼接好后写入字节数组content中
         if (requestPropertyMap != null) {
             StringBuilder stringBuilder = new StringBuilder();
-            for(Map.Entry<String, String> entry : requestPropertyMap.entrySet()) {
+            for (Map.Entry<String, String> entry : requestPropertyMap.entrySet()) {
                 stringBuilder.append(entry.getKey());
                 stringBuilder.append("=");
                 stringBuilder.append(entry.getValue());

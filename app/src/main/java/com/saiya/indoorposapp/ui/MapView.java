@@ -65,7 +65,7 @@ public class MapView extends ImageView {
         mImageWidth = bm.getWidth();
         mImageHeight = bm.getHeight();
         this.mapScale = mapScale;
-        if(getWidth() == 0) {
+        if (getWidth() == 0) {
             ViewTreeObserver vto = getViewTreeObserver();
             vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                 public boolean onPreDraw() {
@@ -105,7 +105,7 @@ public class MapView extends ImageView {
     public void setIndicator(float x, float y, boolean isUIThread) {
         indicatorX = x;
         indicatorY = y;
-        if(isUIThread) {
+        if (isUIThread) {
             invalidate();
         } else {
             postInvalidate();

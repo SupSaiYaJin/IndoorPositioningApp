@@ -77,8 +77,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
      * 点击选择场景后触发的事件
      */
     private void chooseSceneNameOnClick() {
-        new MainActivity.ChooseSceneTask(mActivity,
-                new MainActivity.ChooseSceneTask.OnChooseSceneListener() {
+        mActivity. new ChooseSceneTask(new MainActivity.OnChooseSceneListener() {
             @Override
             public void onChooseScene(SceneInfo sceneInfo) {
                 edtTxt_updateMap_sceneName.setText(sceneInfo.getSceneName());

@@ -46,7 +46,7 @@ public class SeekbarSettingDialog extends AlertDialog {
      * @param onConfirmListener 点击确定按钮后执行的动作
      */
     public void setProperties(int title, int oriIndex, int[] values,
-                              OnConfirmListener onConfirmListener) {
+            OnConfirmListener onConfirmListener) {
         mValues = values;
         mOnConfirmListener = onConfirmListener;
         //由数组大小算出的最小进度单元
@@ -84,7 +84,7 @@ public class SeekbarSettingDialog extends AlertDialog {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int progress = seekBar.getProgress();
                 int bound = mProgressUnit;
-                for(int i = 0; i < mValues.length; ++i) {
+                for (int i = 0; i < mValues.length; ++i) {
                     if (progress < bound) {
                         seekBar.setProgress(2 * i * mProgressUnit);
                         break;

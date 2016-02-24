@@ -48,7 +48,7 @@ import java.util.List;
  * 主Activity,包含定位,更新指纹,更新地图,设置四个页面Fragment
  */
 public class MainActivity extends FragmentActivity
-implements OnPageChangeListener, OnClickListener, SensorEventListener{
+        implements OnPageChangeListener, OnClickListener, SensorEventListener{
 
     //用于显示Fragment
     private MyViewPager vp_main_pager;
@@ -132,33 +132,31 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
     }
 
     /**
+     * 封装选择场景时发生的事件
+     */
+    public interface OnChooseSceneListener {
+        void onChooseScene(SceneInfo sceneInfo);
+    }
+
+    /**
      * 选择场景的异步任务类
      */
-    public static class ChooseSceneTask extends AsyncTask<Void, Void, String[]> {
-
-        /**
-         * 封装选择场景时发生的事件
-         */
-        public interface OnChooseSceneListener {
-            void onChooseScene(SceneInfo sceneInfo);
-        }
+    public class ChooseSceneTask extends AsyncTask<Void, Void, String[]> {
 
         private ProgressDialog mProgressDialog;
-        private MainActivity mActivity;
         private List<SceneInfo> mSceneList;
         private OnChooseSceneListener mlistener;
 
-        public ChooseSceneTask(MainActivity activity, OnChooseSceneListener listener) {
-            mActivity = activity;
+        public ChooseSceneTask(OnChooseSceneListener listener) {
             mlistener = listener;
         }
 
         @Override
         protected void onPreExecute() {
             //创建一个进度条对话框
-            mProgressDialog = new ProgressDialog(mActivity);
+            mProgressDialog = new ProgressDialog(MainActivity.this);
             mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            mProgressDialog.setMessage(mActivity.getString(R.string.fragment_updateFP_gettingList));
+            mProgressDialog.setMessage(MainActivity.this.getString(R.string.fragment_updateFP_gettingList));
             mProgressDialog.setCancelable(false);
             mProgressDialog.setCanceledOnTouchOutside(false);
             mProgressDialog.show();
@@ -171,11 +169,11 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
                 if (mSceneList == null || mSceneList.size() == 0) {
                     Message msg = new Message();
                     msg.obj = PositioningResponse.NETWORK_ERROR;
-                    mActivity.getMyHandler().sendMessage(msg);
+                    MainActivity.this.getMyHandler().sendMessage(msg);
                 }
                 else {
                     String[] sceneListArray = new String[mSceneList.size()];
-                    for(int i = 0; i < mSceneList.size(); ++i) {
+                    for (int i = 0; i < mSceneList.size(); ++i) {
                         sceneListArray[i] = mSceneList.get(i).getSceneName();
                     }
                     return sceneListArray;
@@ -184,7 +182,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
                 e.printStackTrace();
                 Message msg = new Message();
                 msg.obj = PositioningResponse.UNAUTHORIZED;
-                mActivity.getMyHandler().sendMessage(msg);
+                MainActivity.this.getMyHandler().sendMessage(msg);
             }
             return null;
         }
@@ -216,7 +214,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
                     }
                 }
             };
-            AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle(R.string.fragment_updateMap_chooseSceneName);
             builder.setSingleChoiceItems(strings, -1, onClickListener);
             builder.setPositiveButton(R.string.fragment_settings_confirm, onClickListener);
@@ -439,7 +437,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         });
         StringBuilder mac = new StringBuilder();
         StringBuilder rssi = new StringBuilder();
-        for(int i = 0; i < n && i < scanResultList.size(); ++i) {
+        for (int i = 0; i < n && i < scanResultList.size(); ++i) {
             mac.append(scanResultList.get(i).BSSID).append(",");
             rssi.append(scanResultList.get(i).level).append(",");
         }
@@ -462,7 +460,7 @@ implements OnPageChangeListener, OnClickListener, SensorEventListener{
         }
         mWifiManager.startScan();
         List<ScanResult> scanResultList = mWifiManager.getScanResults();
-        for(ScanResult scanResult : scanResultList) {
+        for (ScanResult scanResult : scanResultList) {
             allWifiScanResult.add(new WifiFingerprint(scanResult.BSSID, (float) scanResult.level));
         }
         return allWifiScanResult;
