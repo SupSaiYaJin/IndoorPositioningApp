@@ -69,6 +69,10 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    //若终端没有移动,则不进行定位
+                    if (!mActivity.isMoved()) {
+                        return;
+                    }
                     String[] wifiData = mActivity.getWifiScanResult(mNumberOfAP);
                     //若WiFi关闭,结束定位,并报网络错误
                     if (wifiData == null) {

@@ -342,39 +342,68 @@ public class MainActivity extends FragmentActivity
 
     /** 存储旋转矩阵的值 */
     private float[] r = new float[9];
+    /** 存储大地坐标方向的加速度值 */
+    private float[] fixedAccValues = new float[3];
     /** 存储地磁指纹的Y方向值和Z方向值 */
-    private float[] result = new float[2];
+    private float[] fixedMagValues = new float[2];
     /** 用于存储加速度传感器的值 */
-    private float[] avalues = new float[3];
+    private float[] aValues = new float[3];
     /** 用于存储地磁传感器的值 */
-    private float[] mvalues = new float[3];
+    private float[] mValues = new float[3];
+    /** 上次发起定位的时间 */
+    private long lastLocateTime = 0;
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
-                avalues[0] = event.values[0];
-                avalues[1] = event.values[1];
-                avalues[2] = event.values[2];
+                aValues[0] = event.values[0];
+                aValues[1] = event.values[1];
+                aValues[2] = event.values[2];
                 break;
             case Sensor.TYPE_MAGNETIC_FIELD:
-                mvalues[0] = event.values[0];
-                mvalues[1] = event.values[1];
-                mvalues[2] = event.values[2];
+                mValues[0] = event.values[0];
+                mValues[1] = event.values[1];
+                mValues[2] = event.values[2];
                 break;
             default:
                 break;
         }
-        if (SensorManager.getRotationMatrix(r, null, avalues, mvalues)) {
-            result[0] = r[3] * mvalues[0] + r[4] * mvalues[1] + r[5] * mvalues[2];
-            result[1] = r[6] * mvalues[0] + r[7] * mvalues[1] + r[8] * mvalues[2];
+        if (SensorManager.getRotationMatrix(r, null, aValues, mValues)) {
+            fixedAccValues[0] = r[0] * aValues[0] + r[1] * aValues[1] + r[2] * aValues[2];
+            fixedAccValues[1] = r[3] * aValues[0] + r[4] * aValues[1] + r[5] * aValues[2];
+            fixedAccValues[2] = r[6] * aValues[0] + r[7] * aValues[1] + r[8] * aValues[2];
+            fixedMagValues[0] = r[3] * mValues[0] + r[4] * mValues[1] + r[5] * mValues[2];
+            fixedMagValues[1] = r[6] * mValues[0] + r[7] * mValues[1] + r[8] * mValues[2];
         }
-        MainActivity.this.setGeomagneticRSS(result[0], result[1]);
+        long currentTime = System.currentTimeMillis();
+        /** 最长空闲时间 */
+        final long maxIdleTime = 1000 * 30;
+        if (currentTime - lastLocateTime > maxIdleTime) {
+            isMoved = true;
+        }
+        /** 加速度阈值,超过则判定为移动了 */
+        final float accThreshold = 1.6f;
+        if (fixedAccValues[0] + fixedAccValues[1] + fixedAccValues[2] > accThreshold) {
+            isMoved = true;
+        }
+        MainActivity.this.setGeomagneticRSS(fixedMagValues[0], fixedMagValues[1]);
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    /** 指示是否需要进行定位 */
+    private boolean isMoved;
+    public boolean isMoved() {
+        if (isMoved) {
+            lastLocateTime = System.currentTimeMillis();
+        }
+        boolean temp = isMoved;
+        isMoved = false;
+        return temp;
     }
 
     @Override

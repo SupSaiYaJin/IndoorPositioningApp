@@ -23,7 +23,7 @@ import java.util.UUID;
  */
 public class HttpUtils {
 
-    /** 服务器地址,实验室IP为http://10.107.34.169 */
+    /** 服务器地址,实验室IP为http://10.107.34.169 家里IP为192.168.1.104:8080 */
     private static final String SERVER_URL = "http://192.168.1.104:8080";
     /** 注册请求的服务器路径 */
     private static final String REGISTER_PATH = "/register";
@@ -44,7 +44,7 @@ public class HttpUtils {
     /** 服务器设置的JSESSIONID */
     private static String JSESSIONID;
     /** 连接服务器超时时间 */
-    private static int CONNECTION_TIMEOUT = 1000 * 3;
+    private static int CONNECTION_TIMEOUT = 1000 * 6;
 
 
     /**
