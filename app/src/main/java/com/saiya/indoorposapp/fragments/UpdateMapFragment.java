@@ -25,10 +25,11 @@ import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * 上传地图的Fragment
@@ -117,19 +118,15 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         } else {
             scale = 0;
         }
-        //读取图片文件到byte[]数组mapBytes
         File file = new File(filePath);
-        final byte[] mapBytes;
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream((int) file.length());
-                BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
+        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+                OutputStream out = mActivity.openFileOutput(sceneName + ".jpg", Context.MODE_PRIVATE)) {
             int bufSize = 1024;
             byte[] buffer = new byte[bufSize];
             int len;
             while ((len = in.read(buffer,0,bufSize)) != -1) {
                 out.write(buffer,0,len);
             }
-            mapBytes = out.toByteArray();
-            mActivity.openFileOutput(sceneName + ".jpg", Context.MODE_PRIVATE).write(mapBytes);
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(mActivity, R.string.fragment_updateMap_streamFailed, Toast.LENGTH_SHORT).show();
@@ -144,8 +141,8 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
             @Override
             public void run() {
                 boolean uploadResult;
-                try {
-                    uploadResult = HttpUtils.uploadMap(sceneName, scale, mapBytes);
+                try (InputStream in = mActivity.openFileInput(sceneName + ".jpg")){
+                    uploadResult = HttpUtils.uploadMap(sceneName, scale, in);
                     if (uploadResult) {
                         Message msg = new Message();
                         msg.obj = PositioningResponse.UPDATE_MAP_SUCCEED;
@@ -160,6 +157,8 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
                     Message msg = new Message();
                     msg.obj = PositioningResponse.UNAUTHORIZED;
                     mActivity.getMyHandler().sendMessage(msg);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 } finally {
                     progressDialog.dismiss();
                 }
