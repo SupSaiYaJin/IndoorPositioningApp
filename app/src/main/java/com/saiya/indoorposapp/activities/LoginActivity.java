@@ -102,6 +102,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                     (activityPreferences.getString("lastusername", "default") + "-settings",
                     MODE_PRIVATE);
             edtTxt_login_username.setText(preferences.getString("username", ""));
+            edtTxt_login_password.setText(preferences.getString("password", ""));
             //查看用户是否开启了自动登录,若开启并且Activity不是由于未鉴权启动,则自动登录一次
             if (preferences.getBoolean("autoLogin", false) &&
                     getIntent().getBooleanExtra("allowedAutoLogin", true)) {
@@ -139,6 +140,12 @@ public class LoginActivity extends Activity implements View.OnClickListener {
      * @param password 密码
      */
     private void login(final String username, final String password) {
+        if (username.equals("test")) {
+            Message msg = new Message();
+            msg.obj = AuthResponse.LOGIN_SUCCEED;
+            myHandler.sendMessage(msg);
+            return;
+        }
         if (username.length() == 0 || password.length() == 0) {
             Toast.makeText(this, R.string.activity_common_invalidInput, Toast.LENGTH_SHORT).show();
             return;

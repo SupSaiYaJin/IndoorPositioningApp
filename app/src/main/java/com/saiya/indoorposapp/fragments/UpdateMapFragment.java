@@ -121,12 +121,13 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         File file = new File(filePath);
         final byte[] mapBytes;
         try (ByteArrayOutputStream out = new ByteArrayOutputStream((int) file.length());
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
+                BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
             int bufSize = 1024;
             byte[] buffer = new byte[bufSize];
             int len;
-            while((len = in.read(buffer,0,bufSize)) != -1)
+            while ((len = in.read(buffer,0,bufSize)) != -1) {
                 out.write(buffer,0,len);
+            }
             mapBytes = out.toByteArray();
             mActivity.openFileOutput(sceneName + ".jpg", Context.MODE_PRIVATE).write(mapBytes);
         } catch (IOException e) {

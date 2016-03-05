@@ -16,6 +16,7 @@
             android:layout_margin="8dp"
             android:layout_gravity="end"
             android:background="@drawable/bg_settings"
+            android:alpha="0.5"
             android:orientation="vertical">
 
             <Button

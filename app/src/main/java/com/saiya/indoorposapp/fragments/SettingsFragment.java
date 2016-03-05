@@ -134,9 +134,9 @@ public class SettingsFragment extends Fragment
         File files = mActivity.getFilesDir();
         if (files != null && files.exists() && files.isDirectory()) {
             for (File item : files.listFiles()) {
-                if (!item.delete()) {
+                if (item.isFile() && !item.delete()) {
                     Toast.makeText(mActivity, R.string.fragment_settings_deleteFailed, Toast.LENGTH_SHORT).show();
-                    break;
+                    return;
                 }
             }
         }
