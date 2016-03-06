@@ -60,6 +60,11 @@ public class MapView extends ImageView {
         moveListener = listener;
     }
 
+    /**
+     * 设置MapView显示的地图
+     * @param bm 要显示的Bitmap对象
+     * @param mapScale 设置地图的比例尺,用于准确显示位置
+     */
     public void setMap(Bitmap bm, float mapScale) {
         super.setImageBitmap(bm);
         mImageWidth = bm.getWidth();

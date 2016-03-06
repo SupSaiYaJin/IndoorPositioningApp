@@ -1,11 +1,15 @@
 package com.saiya.indoorposapp.tools;
 
+import android.content.Context;
+
+import com.saiya.indoorposapp.activities.MainActivity;
 import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -44,7 +48,7 @@ public class HttpUtils {
     /** 服务器设置的JSESSIONID */
     private static String JSESSIONID;
     /** 连接服务器超时时间 */
-    private static int CONNECTION_TIMEOUT = 1000 * 6;
+    private static int CONNECTION_TIMEOUT = 1000 * 5;
 
 
     /**
@@ -293,11 +297,13 @@ public class HttpUtils {
     /**
      * 向服务器发起下载地图的请求
      * @param sceneName 场景名称
+     * @param activity MainActivity实例,用于获取文件存储路径
      * @return 返回代表地图文件的字节数组
      */
-    public static byte[] downloadMap(String sceneName) throws UnauthorizedException {
-
-        try {
+    public static boolean downloadMap(String sceneName, MainActivity activity)
+            throws UnauthorizedException {
+        try (FileOutputStream out = activity
+                .openFileOutput(sceneName + ".jpg", Context.MODE_PRIVATE)) {
             String getURL = "?sceneName=" +  sceneName;
             URL url = new URL(SERVER_URL + DOWNLOAD_MAP_PATH + getURL);
             LogUtils.d("downloadMapURL", url.toString());
@@ -308,32 +314,32 @@ public class HttpUtils {
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Cookie", String.format("JSESSIONID=%s", JSESSIONID));
             //读取响应
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte buffer[] = new byte[1024];
-            InputStream in = conn.getInputStream();
+            BufferedInputStream in = new BufferedInputStream(conn.getInputStream());
+            in.mark(1);
+            if ((byte)in.read() == "{".getBytes()[0]) {
+                throw new UnauthorizedException();
+            }
+            in.reset();
             int n;
             while((n = in.read(buffer)) != -1) {
                 out.write(buffer, 0, n);
             }
-            byte[] map = out.toByteArray();
-            if (map.length == 20) {
-                throw new UnauthorizedException();
-            }
-            return map;
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        return false;
     }
 
     /**
      * 向服务器发起上传地图的请求
      * @param sceneName 场景名称
      * @param scale 场景比例尺,意义为scale个像素表示1米
-     * @param mapBytes 要上传的地图文件的字节数组
+     * @param in 要上传的地图文件的输入流
      * @return 返回true代表上传成功,false代表上传失败
      */
-    public static boolean uploadMap(String sceneName, float scale, byte[] mapBytes)
+    public static boolean uploadMap(String sceneName, float scale, InputStream in)
             throws UnauthorizedException {
         /** 边界标识,随机生成 */
         String BOUNDARY =  UUID.randomUUID().toString();
@@ -359,7 +365,11 @@ public class HttpUtils {
                     "Content-Type: application/octet-stream; charset=" +
                     "utf-8" + LINE_END + LINE_END).getBytes());
             //发送字节数组
-            out.write(mapBytes);
+            byte[] buffer = new byte[1024];
+            int n;
+            while((n = in.read(buffer)) != -1) {
+                out.write(buffer, 0, n);
+            }
             out.write(LINE_END.getBytes());
             out.write((PREFIX + BOUNDARY + PREFIX + LINE_END).getBytes());
             out.flush();

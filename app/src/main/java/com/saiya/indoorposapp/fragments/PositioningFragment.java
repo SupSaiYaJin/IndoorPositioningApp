@@ -2,7 +2,6 @@ package com.saiya.indoorposapp.fragments;
 
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -25,9 +24,9 @@ import com.saiya.indoorposapp.tools.PositioningResponse;
 import com.saiya.indoorposapp.tools.PreferencessHelper;
 import com.saiya.indoorposapp.ui.MapView;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 /**
@@ -177,6 +176,31 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
     }
 
     /**
+     * 计算图片压缩比
+     * @param options 带有原图片的信息
+     * @param reqWidth 希望压缩的宽度
+     * @param reqHeight 希望压缩的高度
+     * @return 返回图片压缩比
+     */
+    public static int calculateInSampleSize(BitmapFactory.Options options,
+                                            int reqWidth, int reqHeight) {
+        //源图片的高度和宽度
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+        if (height > reqHeight || width > reqWidth) {
+            //计算出实际宽高和目标宽高的比率
+            //选择宽和高中最小的比率作为inSampleSize的值,这样可以保证最终图片的宽和高都会大于等于目标的宽和高.
+            if (width > height) {
+                inSampleSize = Math.round((float) height / (float) reqHeight);
+            } else {
+                inSampleSize = Math.round((float) width / (float) reqWidth);
+            }
+        }
+        return inSampleSize;
+    }
+
+    /**
      * 设置显示的地图
      */
     private void setMap(String sceneName, long lastUpdateTime) {
@@ -191,13 +215,20 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                 new DownloadMapTask().execute(sceneName);
             //否则直接读入本地地图文件
             } else {
-                try (FileInputStream in = new FileInputStream(mapFile)){
-                    Bitmap map = BitmapFactory.decodeStream(in);
+                try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(mapFile))){
+                    in.mark(1024);
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inJustDecodeBounds = true;
+                    BitmapFactory.decodeStream(in, null, options);
                     //若无法解析地图文件,重新下载地图
-                    if (map == null) {
+                    if (options.outWidth == 0 || options.outHeight == 0) {
                         new DownloadMapTask().execute(sceneName);
                         return;
                     }
+                    in.reset();
+                    options.inSampleSize = calculateInSampleSize(options, 800, 1000);
+                    options.inJustDecodeBounds = false;
+                    Bitmap map = BitmapFactory.decodeStream(in, null, options);
                     mv_positioning_map.setMap(map, mMapScale);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -273,7 +304,6 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
     private class DownloadMapTask extends AsyncTask<String, Void, PositioningResponse> {
 
         private ProgressDialog mProgressDialog;
-        private byte[] mapBytes;
         @Override
         protected void onPreExecute() {
             //创建一个进度条对话框
@@ -287,22 +317,16 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
 
         @Override
         protected PositioningResponse doInBackground(String... params) {
-            try (FileOutputStream out = mActivity
-                    .openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE)){
-                mapBytes = HttpUtils.downloadMap(params[0]);
-                if (mapBytes == null) {
+            try {
+                if (HttpUtils.downloadMap(params[0], mActivity)) {
+                    return PositioningResponse.DOWNLOAD_MAP_SUCCEED;
+                } else {
                     return PositioningResponse.NETWORK_ERROR;
                 }
-                out.write(mapBytes);
-                out.flush();
             } catch (UnauthorizedException e) {
                 e.printStackTrace();
                 return PositioningResponse.UNAUTHORIZED;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return PositioningResponse.NETWORK_ERROR;
             }
-            return PositioningResponse.DOWNLOAD_MAP_SUCCEED;
         }
 
         @Override
@@ -311,12 +335,8 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
             Message msg = new Message();
             msg.obj = response;
             if (response == PositioningResponse.DOWNLOAD_MAP_SUCCEED) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(mapBytes, 0, mapBytes.length);
-                if (bitmap != null) {
-                    mv_positioning_map.setMap(bitmap, mMapScale);
-                } else {
-                    msg.obj = PositioningResponse.NETWORK_ERROR;
-                }
+                File mapFile = new File(mActivity.getFilesDir(), mSceneName + ".jpg");
+                setMap(mSceneName, mapFile.lastModified());
             }
             mActivity.getMyHandler().sendMessage(msg);
         }
