@@ -19,9 +19,11 @@ import com.saiya.indoorposapp.activities.MainActivity;
 import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.bean.WifiFingerprint;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
-import com.saiya.indoorposapp.tools.Algorithms;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
+import com.saiya.indoorposapp.tools.postioning.Algorithms;
+import com.saiya.indoorposapp.tools.postioning.Filter;
+import com.saiya.indoorposapp.tools.postioning.KalmanFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -127,14 +129,15 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                 break;
         }
     }
+
     /**
      * 更新WiFi指纹数据的异步任务类,需要提供当前地点的X，Y坐标
      */
-
     private class UpdateWifiFPTask extends AsyncTask<Float, Integer, PositioningResponse> {
-        private ProgressDialog progressDialog;
 
+        private ProgressDialog progressDialog;
         private String sceneName;
+        private Filter filter = new KalmanFilter(4, 3);
 
         @Override
         protected void onPreExecute() {
@@ -151,7 +154,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         @Override
         protected PositioningResponse doInBackground(Float... params) {
             /** 存储所有WiFi强度信息,String为MAC地址,float数组第一位为多次RSS值的和,第二位为扫描到的次数 */
-            Map<String, float[]> wifiScanResultSum = new HashMap<>();
+            Map<String, List<Float>> wifiScanResultSum = new HashMap<>();
             //进行numberOfAcquision次采集,并更新进度条
             for (int i = 0; i < numberOfAcquision; ++i) {
                 publishProgress(i + 1);
@@ -163,11 +166,9 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
                     String mac = wifiFingerprint.getMac();
                     float rssi = wifiFingerprint.getRssi();
                     if (wifiScanResultSum.containsKey(mac)) {
-                        float rssiSum = wifiScanResultSum.get(mac)[0];
-                        float count = wifiScanResultSum.get(mac)[1];
-                        wifiScanResultSum.put(mac, new float[]{rssiSum + rssi, count + 1});
+                        wifiScanResultSum.get(mac).add(rssi);
                     } else {
-                        wifiScanResultSum.put(mac, new float[]{rssi, 1});
+                        wifiScanResultSum.put(mac, new ArrayList<Float>(numberOfAcquision));
                     }
                 }
                 if (i != numberOfAcquision - 1) {
@@ -181,9 +182,10 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             /** 存储平均后的扫描结果 */
             List<WifiFingerprint> wifiScanResultAveraged = new ArrayList<>();
             //将WiFi扫描结果取平均
-            for (Map.Entry<String, float[]> entry : wifiScanResultSum.entrySet())
+            for (Map.Entry<String, List<Float>> entry : wifiScanResultSum.entrySet()) {
                 wifiScanResultAveraged.add(new WifiFingerprint
-                        (entry.getKey(), entry.getValue()[0] / entry.getValue()[1]));
+                        (entry.getKey(), filter.doFilter(entry.getValue())));
+            }
             //将WiFi扫描结果的前N强的信息取出
             Algorithms.findKStrongestRSSI(wifiScanResultAveraged,
                     0, wifiScanResultAveraged.size() - 1, NUMBER_OF_UPDATE_WIFIAP);
@@ -228,10 +230,10 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         }
 
     }
+
     /**
      * 更新地磁指纹的异步任务,需要提供当前地点的X,Y坐标
      */
-
     private class UpdateGeoFPTask extends AsyncTask<Float, Integer, PositioningResponse> {
         private ProgressDialog progressDialog;
         private String sceneName;

@@ -263,7 +263,8 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:text="@string/fragment_settings_logout"
-            android:background="@drawable/common_btn_style"/>
+            android:background="@drawable/common_btn_style"
+            android:textColor="@color/black"/>
 
     </LinearLayout>
 

@@ -1,12 +1,16 @@
 package com.saiya.indoorposapp.activities;
 
-import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,9 +26,12 @@ import java.lang.ref.WeakReference;
 /**
  * 用户登录Activity
  */
-public class LoginActivity extends Activity implements View.OnClickListener {
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
     private SharedPreferences activityPreferences;
+
+    private AlertDialog setIpDialog;
+    private EditText edtTxt_setIp;
 
     private EditText edtTxt_login_username;
     private EditText edtTxt_login_password;
@@ -77,6 +84,44 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_login);
         ActivityCollector.addActivity(this);
         initView();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.login, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_login_setip:
+                if (setIpDialog == null) {
+                    edtTxt_setIp = new EditText(this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle(R.string.menu_login_setip);
+                    builder.setView(edtTxt_setIp);
+                    builder.setPositiveButton(R.string.fragment_settings_confirm,
+                            new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case AlertDialog.BUTTON_POSITIVE:
+                                    HttpUtils.setServerIp(edtTxt_setIp.getText().toString());
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
+                    setIpDialog = builder.create();
+                    setIpDialog.show();
+                } else {
+                    setIpDialog.show();
+                }
+                break;
+        }
+        return true;
     }
 
     /**
@@ -140,12 +185,6 @@ public class LoginActivity extends Activity implements View.OnClickListener {
      * @param password 密码
      */
     private void login(final String username, final String password) {
-        if (username.equals("test")) {
-            Message msg = new Message();
-            msg.obj = AuthResponse.LOGIN_SUCCEED;
-            myHandler.sendMessage(msg);
-            return;
-        }
         if (username.length() == 0 || password.length() == 0) {
             Toast.makeText(this, R.string.activity_common_invalidInput, Toast.LENGTH_SHORT).show();
             return;

@@ -28,6 +28,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * 定位Fragment
@@ -215,8 +216,9 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                 new DownloadMapTask().execute(sceneName);
             //否则直接读入本地地图文件
             } else {
-                try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(mapFile))){
-                    in.mark(1024);
+                InputStream in = null;
+                try {
+                    in = new FileInputStream(mapFile);
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inJustDecodeBounds = true;
                     BitmapFactory.decodeStream(in, null, options);
@@ -225,13 +227,22 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                         new DownloadMapTask().execute(sceneName);
                         return;
                     }
-                    in.reset();
+                    in.close();
+                    in = new FileInputStream(mapFile);
                     options.inSampleSize = calculateInSampleSize(options, 800, 1000);
                     options.inJustDecodeBounds = false;
                     Bitmap map = BitmapFactory.decodeStream(in, null, options);
                     mv_positioning_map.setMap(map, mMapScale);
                 } catch (IOException e) {
                     e.printStackTrace();
+                } finally {
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
         }

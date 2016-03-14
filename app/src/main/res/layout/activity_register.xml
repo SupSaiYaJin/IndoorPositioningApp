@@ -43,8 +43,8 @@
         android:layout_margin="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="?android:buttonBarButtonStyle"
         android:background="@drawable/common_btn_style"
-        android:text="@string/activity_register_confirm"/>
+        android:text="@string/activity_register_confirm"
+        android:textColor="@color/black"/>
 
 </LinearLayout>

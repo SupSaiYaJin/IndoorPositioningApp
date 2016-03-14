@@ -44,6 +44,7 @@ public class SettingsFragment extends Fragment
     private TextView tv_settings_numberOfWifiAp;
     private TextView tv_settings_numberOfAcquisition;
 
+    private AlertDialog locationMethodDialog;
     private SeekbarSettingDialog locationIntervalDialog;
     private SeekbarSettingDialog numOfWifiApDialog;
     private SeekbarSettingDialog numOfAcquisitionDialog;
@@ -147,45 +148,52 @@ public class SettingsFragment extends Fragment
      * 点击定位方法设置进行的操作
      */
     private void changeLocationMethod() {
-        //构造选择定位方法的对话框,由3个单选项组成
-        String[] locationMethodString = new String[]{getString(R.string
-                .fragment_settings_useBothMethod), getString(R.string
-                .fragment_settings_wifiOnly), getString(R.string
-                .fragment_settings_geomagneticOnly)};
-        DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
-            /** 记录被选择的单选项序号,初始化为当前选项 */
-            private int mSelectedWhich = preferences.getLocationMethod();
+        if (locationMethodDialog == null) {
+            //构造选择定位方法的对话框,由3个单选项组成
+            String[] locationMethodString = new String[]{getString(R.string
+                    .fragment_settings_useBothMethod), getString(R.string
+                    .fragment_settings_wifiOnly), getString(R.string
+                    .fragment_settings_geomagneticOnly)};
+            DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
+                /**
+                 * 记录被选择的单选项序号,初始化为当前选项
+                 */
+                private int mSelectedWhich = preferences.getLocationMethod();
 
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //若点确定按钮,做对应的操作
-                if (which == AlertDialog.BUTTON_POSITIVE) {
-                    switch (mSelectedWhich) {
-                        case PositioningFragment.USE_ALL_METHOD:
-                            tv_settings_locationMethod.setText(R.string.fragment_settings_useBothMethod);
-                            break;
-                        case PositioningFragment.USE_WIFI_ONLY:
-                            tv_settings_locationMethod.setText(R.string.fragment_settings_wifiOnly);
-                            break;
-                        case PositioningFragment.USE_GEOMAGNETIC_ONLY:
-                            tv_settings_locationMethod.setText(R.string.fragment_settings_geomagneticOnly);
-                            break;
-                        default:
-                            break;
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    //若点确定按钮,做对应的操作
+                    if (which == AlertDialog.BUTTON_POSITIVE) {
+                        switch (mSelectedWhich) {
+                            case PositioningFragment.USE_ALL_METHOD:
+                                tv_settings_locationMethod.setText(R.string.fragment_settings_useBothMethod);
+                                break;
+                            case PositioningFragment.USE_WIFI_ONLY:
+                                tv_settings_locationMethod.setText(R.string.fragment_settings_wifiOnly);
+                                break;
+                            case PositioningFragment.USE_GEOMAGNETIC_ONLY:
+                                tv_settings_locationMethod.setText(R.string.fragment_settings_geomagneticOnly);
+                                break;
+                            default:
+                                break;
+                        }
+                        preferences.setLocationMethod(mSelectedWhich);
+                        mActivity.getPositioningFragment().setLocationMethod(mSelectedWhich);
+                        //若点击单选项,仅改变mSelectedWhich的值
+                    } else {
+                        mSelectedWhich = which;
                     }
-                    preferences.setLocationMethod(mSelectedWhich);
-                    mActivity.getPositioningFragment().setLocationMethod(mSelectedWhich);
-                //若点击单选项,仅改变mSelectedWhich的值
-                } else {
-                    mSelectedWhich = which;
                 }
-            }
-        };
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(R.string.fragment_settings_locationMethod);
-        builder.setSingleChoiceItems(locationMethodString, preferences.getLocationMethod(), onClickListener);
-        builder.setPositiveButton(R.string.fragment_settings_confirm, onClickListener);
-        builder.show();
+            };
+            AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+            builder.setTitle(R.string.fragment_settings_locationMethod);
+            builder.setSingleChoiceItems(locationMethodString, preferences.getLocationMethod(), onClickListener);
+            builder.setPositiveButton(R.string.fragment_settings_confirm, onClickListener);
+            locationMethodDialog = builder.create();
+            locationMethodDialog.show();
+        } else {
+            locationMethodDialog.show();
+        }
     }
 
     /**

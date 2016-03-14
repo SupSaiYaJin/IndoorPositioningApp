@@ -7,5 +7,6 @@
     <color name="light_grey">#bdbdbd</color>
     <color name="bg_grey">#eaeaea</color>
     <color name="bg_white">#ffffff</color>
+    <color name="black">#000000</color>
     <color name="bg_trans_grey">#60000000</color>
 </resources>

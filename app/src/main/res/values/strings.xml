@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">室内定位平台</string>
 
+    <string name="menu_login_setip">设置服务器IP</string>
     <string name="activity_login_logoDescription">logo</string>
     <string name="activity_login_usernameHint">请输入用户名:</string>
     <string name="activity_login_passwordHint">请输入密码:</string>
