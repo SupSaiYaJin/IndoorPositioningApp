@@ -1,4 +1,4 @@
-package com.saiya.indoorposapp.tools;
+package com.saiya.indoorposapp.tools.postioning;
 
 import com.saiya.indoorposapp.bean.WifiFingerprint;
 

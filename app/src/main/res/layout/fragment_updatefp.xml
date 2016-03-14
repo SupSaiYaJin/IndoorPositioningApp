@@ -108,7 +108,8 @@
             android:layout_weight="1"
             style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
-            android:text="@string/fragment_updateFP_wifi"/>
+            android:text="@string/fragment_updateFP_wifi"
+            android:textColor="@color/black"/>
 
         <Button
             android:id="@+id/btn_updateFP_geomagnetic"
@@ -118,7 +119,8 @@
             android:layout_weight="1"
             style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
-            android:text="@string/fragment_updateFP_geomagnetic"/>
+            android:text="@string/fragment_updateFP_geomagnetic"
+            android:textColor="@color/black"/>
 
     </LinearLayout>
 </LinearLayout>

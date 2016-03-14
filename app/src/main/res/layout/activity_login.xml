@@ -62,7 +62,8 @@
             android:layout_weight="1"
             style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
-            android:text="@string/activity_login_login"/>
+            android:text="@string/activity_login_login"
+            android:textColor="@color/black"/>
 
         <Button
             android:id="@+id/btn_login_register"
@@ -72,7 +73,8 @@
             android:layout_weight="1"
             style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
-            android:text="@string/activity_login_register"/>
+            android:text="@string/activity_login_register"
+            android:textColor="@color/black"/>
 
     </LinearLayout>
 </LinearLayout>

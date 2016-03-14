@@ -27,8 +27,10 @@ import java.util.UUID;
  */
 public class HttpUtils {
 
+    /** 服务器IP地址 */
+    private static String serverIp = "192.168.1.104";
     /** 服务器地址,实验室IP为http://10.107.34.169 家里IP为192.168.1.104:8080 */
-    private static final String SERVER_URL = "http://192.168.1.104:8080";
+    private static String serverUrl = "http://" + serverIp + ":8080";
     /** 注册请求的服务器路径 */
     private static final String REGISTER_PATH = "/register";
     /** 登录请求的服务器路径 */
@@ -50,7 +52,10 @@ public class HttpUtils {
     /** 连接服务器超时时间 */
     private static int CONNECTION_TIMEOUT = 1000 * 5;
 
-
+    public static void setServerIp(String ip) {
+        serverIp = ip;
+        serverUrl = "http://" + serverIp + ":8080";
+    }
     /**
      * 以POST方法与服务器发起请求
      * @param path 向服务器请求的路径
@@ -78,7 +83,7 @@ public class HttpUtils {
             }
         }
         try {
-            URL url = new URL(SERVER_URL + path);
+            URL url = new URL(serverUrl + path);
             HttpURLConnection conn = (HttpURLConnection)url.openConnection();
             //设置Http请求方式为POST,打开输出,禁用缓存,设置内容类型,设置内容大小
             conn.setConnectTimeout(CONNECTION_TIMEOUT);
@@ -152,7 +157,7 @@ public class HttpUtils {
     public static void logout() {
 
          try {
-            URL url = new URL(SERVER_URL + LOGOUT_PATH);
+            URL url = new URL(serverUrl + LOGOUT_PATH);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             //设置请求方式为GET,并设置JSESSIONID
             conn.setConnectTimeout(CONNECTION_TIMEOUT);
@@ -173,7 +178,7 @@ public class HttpUtils {
     public static List<SceneInfo> getSceneList() throws UnauthorizedException {
 
         try {
-            URL url = new URL(SERVER_URL + GET_SCENE_LIST_PATH);
+            URL url = new URL(serverUrl + GET_SCENE_LIST_PATH);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             //设置请求方式为GET,并设置JSESSIONID
             conn.setConnectTimeout(CONNECTION_TIMEOUT);
@@ -305,7 +310,7 @@ public class HttpUtils {
         try (FileOutputStream out = activity
                 .openFileOutput(sceneName + ".jpg", Context.MODE_PRIVATE)) {
             String getURL = "?sceneName=" +  sceneName;
-            URL url = new URL(SERVER_URL + DOWNLOAD_MAP_PATH + getURL);
+            URL url = new URL(serverUrl + DOWNLOAD_MAP_PATH + getURL);
             LogUtils.d("downloadMapURL", url.toString());
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             //设置Http请求使用GET方法,并设置JSESSIONID
@@ -346,7 +351,7 @@ public class HttpUtils {
         String PREFIX = "--";
         String LINE_END = "\r\n";
         try {
-            URL url = new URL(SERVER_URL + UPLOAD_MAP_PATH);
+            URL url = new URL(serverUrl + UPLOAD_MAP_PATH);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setConnectTimeout(CONNECTION_TIMEOUT);
             conn.setReadTimeout(CONNECTION_TIMEOUT);
