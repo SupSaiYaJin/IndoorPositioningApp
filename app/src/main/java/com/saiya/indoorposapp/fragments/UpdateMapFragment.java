@@ -70,7 +70,6 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         btn_updateMap_chooseSceneName.setOnClickListener(this);
         btn_updateMap_chooseFile.setOnClickListener(this);
         btn_updateMap_confirm.setOnClickListener(this);
-        edtTxt_updateMap_sceneName.setText(R.string.activity_main_defaultScene);
         progressDialog = new ProgressDialog(mActivity);
     }
 
@@ -107,7 +106,7 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         String scaleStr = edtTxt_updateMap_scale.getText().toString();
         String filePath = edtTxt_updateMap_filePath.getText().toString();
         //检查参数是否合法
-        if (sceneName.equals(getString(R.string.activity_main_defaultScene)) || sceneName.length() == 0 || filePath.length() == 0) {
+        if (sceneName.equals("") || sceneName.length() == 0 || filePath.length() == 0) {
             Toast.makeText(mActivity, R.string.fragment_updateMap_confirmFailed, Toast.LENGTH_SHORT).show();
             return;
         }

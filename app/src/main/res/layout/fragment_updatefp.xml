@@ -106,7 +106,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
             android:text="@string/fragment_updateFP_wifi"
             android:textColor="@color/black"/>
@@ -117,7 +116,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
             android:text="@string/fragment_updateFP_geomagnetic"
             android:textColor="@color/black"/>

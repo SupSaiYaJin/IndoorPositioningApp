@@ -24,7 +24,6 @@ import com.saiya.indoorposapp.tools.PositioningResponse;
 import com.saiya.indoorposapp.tools.PreferencessHelper;
 import com.saiya.indoorposapp.ui.MapView;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
