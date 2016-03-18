@@ -57,7 +57,7 @@ public class PreferencessHelper {
      * @return 场景名
      */
     public String getLastSceneName() {
-        return preferences.getString("lastSceneName", null);
+        return preferences.getString("lastSceneName", "");
     }
 
     /**

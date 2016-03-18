@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -28,6 +27,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 定位Fragment
@@ -54,72 +58,68 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
     private PreferencessHelper preferences;
     /** 显示地图的MapView */
     private MapView mv_positioning_map;
-    /** 循环发起定位请求的Handler */
-    private Handler mHandler = new Handler();
     /** 定位的场景名 */
     private String mSceneName;
     /** 定位的场景地图的比例尺 */
     private float mMapScale;
+    /** 用于发起定位请求的单线程池 */
+    private ExecutorService singleThreadPool;
+    /** 管理图片缓存与图片加载 */
+    private ImageLoader imageLoader;
     /** 发起定位请求的Runnable,使用Handler实现重复工作 */
     private Runnable mLocateRunnable = new Runnable() {
         private float[] result = new float[2];
         @Override
         public void run() {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    //若终端没有移动,则不进行定位
-                    if (!mActivity.isMoved()) {
-                        return;
-                    }
-                    String[] wifiData = mActivity.getWifiScanResult(mNumberOfAP);
-                    //若WiFi关闭,结束定位,并报网络错误
-                    if (wifiData == null) {
-                        isRunning = false;
-                        mHandler.removeCallbacks(mLocateRunnable);
-                        Message msg = new Message();
-                        msg.obj = PositioningResponse.NETWORK_ERROR;
-                        mActivity.getMyHandler().sendMessage(msg);
-                        return;
-                    }
-                    String mac = wifiData[0];
-                    String rssi = wifiData[1];
-                    float[] MagneticRSS = mActivity.getGeomagneticRSS();
-                    try {
-                        switch (mLocationMethod) {
-                            case USE_ALL_METHOD:
-                                result = HttpUtils.locateOnBoth(mSceneName, mac, rssi,
-                                        MagneticRSS[0], MagneticRSS[1]);
-                                break;
-                            case USE_WIFI_ONLY:
-                                result = HttpUtils.locateOnWifi(mSceneName, mac, rssi);
-                                break;
-                            case USE_GEOMAGNETIC_ONLY:
-                                result = HttpUtils.locateOnGeomagnetic(mSceneName,
-                                        MagneticRSS[0], MagneticRSS[1]);
-                                break;
-                            default:
-                                break;
-                        }
-                    } catch (UnauthorizedException e) {
-                        e.printStackTrace();
-                        isRunning = false;
-                        mHandler.removeCallbacks(mLocateRunnable);
-                        Message msg = new Message();
-                        msg.obj = PositioningResponse.UNAUTHORIZED;
-                        mActivity.getMyHandler().sendMessage(msg);
-                    }
-                    if (result[0] == -1 || result[1] == -1) {
-                        isRunning = false;
-                        mHandler.removeCallbacks(mLocateRunnable);
-                        Message msg = new Message();
-                        msg.obj = PositioningResponse.NETWORK_ERROR;
-                        mActivity.getMyHandler().sendMessage(msg);
-                    }
-                    mv_positioning_map.setIndicator(result[0], result[1], false);
+            while (isRunning) {
+                String[] wifiData = mActivity.getWifiScanResult(mNumberOfAP);
+                //若WiFi关闭,结束定位,并报网络错误
+                if (wifiData == null) {
+                    isRunning = false;
+                    Message msg = Message.obtain();
+                    msg.obj = PositioningResponse.NETWORK_ERROR;
+                    mActivity.getMyHandler().sendMessage(msg);
+                    return;
                 }
-            }).start();
-            mHandler.postDelayed(this, mLocationInterval);
+                String mac = wifiData[0];
+                String rssi = wifiData[1];
+                float[] MagneticRSS = mActivity.getGeomagneticRSS();
+                try {
+                    switch (mLocationMethod) {
+                        case USE_ALL_METHOD:
+                            result = HttpUtils.locateOnBoth(mSceneName, mac, rssi,
+                                    MagneticRSS[0], MagneticRSS[1]);
+                            break;
+                        case USE_WIFI_ONLY:
+                            result = HttpUtils.locateOnWifi(mSceneName, mac, rssi);
+                            break;
+                        case USE_GEOMAGNETIC_ONLY:
+                            result = HttpUtils.locateOnGeomagnetic(mSceneName,
+                                    MagneticRSS[0], MagneticRSS[1]);
+                            break;
+                        default:
+                            break;
+                    }
+                } catch (UnauthorizedException e) {
+                    e.printStackTrace();
+                    isRunning = false;
+                    Message msg = Message.obtain();
+                    msg.obj = PositioningResponse.UNAUTHORIZED;
+                    mActivity.getMyHandler().sendMessage(msg);
+                }
+                if (result[0] == -1 || result[1] == -1) {
+                    isRunning = false;
+                    Message msg = Message.obtain();
+                    msg.obj = PositioningResponse.NETWORK_ERROR;
+                    mActivity.getMyHandler().sendMessage(msg);
+                }
+                mv_positioning_map.setIndicator(result[0], result[1], false);
+                try {
+                    Thread.sleep(mLocationInterval);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     };
 
@@ -170,81 +170,29 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         btn_positioning_switch.setOnClickListener(this);
         mSceneName = preferences.getLastSceneName();
         mMapScale = preferences.getLastSceneScale();
+        singleThreadPool = Executors.newSingleThreadExecutor();
+        imageLoader = new ImageLoader();
         if (mSceneName != null && mMapScale != 0f) {
-            setMap(mSceneName, 0);
+            new SetMapTask().execute(new SceneInfo(mSceneName, mMapScale, 0));
         }
     }
 
     /**
-     * 计算图片压缩比
-     * @param options 带有原图片的信息
-     * @param reqWidth 希望压缩的宽度
-     * @param reqHeight 希望压缩的高度
-     * @return 返回图片压缩比
+     * 被显示时自动开始定位
      */
-    public static int calculateInSampleSize(BitmapFactory.Options options,
-                                            int reqWidth, int reqHeight) {
-        //源图片的高度和宽度
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-        if (height > reqHeight || width > reqWidth) {
-            //计算出实际宽高和目标宽高的比率
-            //选择宽和高中最小的比率作为inSampleSize的值,这样可以保证最终图片的宽和高都会大于等于目标的宽和高.
-            if (width > height) {
-                inSampleSize = Math.round((float) height / (float) reqHeight);
-            } else {
-                inSampleSize = Math.round((float) width / (float) reqWidth);
-            }
-        }
-        return inSampleSize;
+    @Override
+    public void onStart() {
+        super.onStart();
+        startLocation();
     }
 
     /**
-     * 设置显示的地图
+     * fragment不显示时停止定位
      */
-    private void setMap(String sceneName, long lastUpdateTime) {
-        //对应地图文件的File对象
-        File mapFile = new File(mActivity.getFilesDir(), sceneName + ".jpg");
-        //若文件不存在,则下载地图
-        if (!mapFile.exists()) {
-            new DownloadMapTask().execute(sceneName);
-        } else {
-            //若开启了自动更新地图,且服务器的地图较新,则下载地图
-            if (preferences.getAutoUpdateMap() && mapFile.lastModified() < lastUpdateTime) {
-                new DownloadMapTask().execute(sceneName);
-            //否则直接读入本地地图文件
-            } else {
-                InputStream in = null;
-                try {
-                    in = new FileInputStream(mapFile);
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inJustDecodeBounds = true;
-                    BitmapFactory.decodeStream(in, null, options);
-                    //若无法解析地图文件,重新下载地图
-                    if (options.outWidth == 0 || options.outHeight == 0) {
-                        new DownloadMapTask().execute(sceneName);
-                        return;
-                    }
-                    in.close();
-                    in = new FileInputStream(mapFile);
-                    options.inSampleSize = calculateInSampleSize(options, 800, 1000);
-                    options.inJustDecodeBounds = false;
-                    Bitmap map = BitmapFactory.decodeStream(in, null, options);
-                    mv_positioning_map.setMap(map, mMapScale);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    if (in != null) {
-                        try {
-                            in.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        }
+    @Override
+    public void onStop() {
+        super.onStop();
+        isRunning = false;
     }
 
     @Override
@@ -272,10 +220,14 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
             Toast.makeText(mActivity, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
             return;
         }
+        if (mSceneName.equals("")) {
+            Toast.makeText(mActivity, R.string.fragment_positioning_plzChooseScene, Toast.LENGTH_SHORT).show();
+            return;
+        }
         Toast.makeText(mActivity, R.string.fragment_positioning_positioningStarted, Toast.LENGTH_SHORT).show();
         if (!isRunning) {
             isRunning = true;
-            mHandler.post(mLocateRunnable);
+            singleThreadPool.submit(mLocateRunnable);
         }
     }
 
@@ -284,7 +236,6 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      */
     private void stopLocation() {
         Toast.makeText(mActivity, R.string.fragment_positioning_positioningStoped, Toast.LENGTH_SHORT).show();
-        mHandler.removeCallbacks(mLocateRunnable);
         isRunning = false;
     }
 
@@ -296,24 +247,28 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
             mActivity.new ChooseSceneTask(new MainActivity.OnChooseSceneListener() {
                 @Override
                 public void onChooseScene(SceneInfo sceneInfo) {
-                    preferences.setLastSceneName(sceneInfo.getSceneName());
-                    preferences.setLastSceneScale(sceneInfo.getScale());
+                    if (!sceneInfo.getSceneName().equals(mSceneName)) {
+                        new SetMapTask().execute(sceneInfo);
+                    }
                     mSceneName = sceneInfo.getSceneName();
                     mMapScale = sceneInfo.getScale();
-                    setMap(sceneInfo.getSceneName(), sceneInfo.getLastUpdateTime());
-
+                    preferences.setLastSceneName(mSceneName);
+                    preferences.setLastSceneScale(mMapScale);
                 }
             }).execute();
         } else {
             Toast.makeText(mActivity, R.string.fragment_positioning_positioningRunning, Toast.LENGTH_SHORT).show();
         }
     }
+
     /**
-     * 下载地图的异步任务
+     * 设置地图的异步任务
      */
-    private class DownloadMapTask extends AsyncTask<String, Void, PositioningResponse> {
+    private class SetMapTask extends AsyncTask<SceneInfo, Void, Bitmap> {
 
         private ProgressDialog mProgressDialog;
+        private float mapScale;
+
         @Override
         protected void onPreExecute() {
             //创建一个进度条对话框
@@ -326,29 +281,110 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         }
 
         @Override
-        protected PositioningResponse doInBackground(String... params) {
-            try {
-                if (HttpUtils.downloadMap(params[0], mActivity)) {
-                    return PositioningResponse.DOWNLOAD_MAP_SUCCEED;
-                } else {
-                    return PositioningResponse.NETWORK_ERROR;
-                }
-            } catch (UnauthorizedException e) {
-                e.printStackTrace();
-                return PositioningResponse.UNAUTHORIZED;
-            }
+        protected Bitmap doInBackground(SceneInfo... params) {
+            mapScale = params[0].getScale();
+            return imageLoader.getBitmap(params[0].getSceneName(), params[0].getLastUpdateTime());
         }
 
         @Override
-        protected void onPostExecute(PositioningResponse response) {
+        protected void onPostExecute(Bitmap bitmap) {
             mProgressDialog.dismiss();
-            Message msg = new Message();
-            msg.obj = response;
-            if (response == PositioningResponse.DOWNLOAD_MAP_SUCCEED) {
-                File mapFile = new File(mActivity.getFilesDir(), mSceneName + ".jpg");
-                setMap(mSceneName, mapFile.lastModified());
+            if (bitmap != null) {
+                mv_positioning_map.setMap(bitmap, mapScale);
             }
+        }
+
+    }
+
+    private class ImageLoader {
+        private LinkedHashMap<String, Bitmap> memoryCache;
+        private int bytesUsed;
+        private static final int MaxBytes = 1024 * 1024 * 50;
+
+        ImageLoader() {
+            memoryCache = new LinkedHashMap<>(8, 0.75f, true);
+        }
+
+        private void addToCache(String sceneName, Bitmap bitmap) {
+            if (!memoryCache.containsKey(sceneName)) {
+                memoryCache.put(sceneName, bitmap);
+                bytesUsed += bitmap.getAllocationByteCount();
+                checkSize();
+            }
+        }
+
+        private void checkSize() {
+            Iterator<Map.Entry<String, Bitmap>> iterator = memoryCache.entrySet().iterator();
+            while (iterator.hasNext()) {
+                if (bytesUsed > MaxBytes) {
+                    Map.Entry<String, Bitmap> entry = iterator.next();
+                    bytesUsed -= entry.getValue().getAllocationByteCount();
+                    iterator.remove();
+                } else {
+                    break;
+                }
+            }
+        }
+
+        public Bitmap getBitmap(String sceneName, long lastUpdateTime) {
+            if (!isFileUpToDate(getFile(sceneName), lastUpdateTime)) {
+                return getFromInternet(sceneName);
+            }
+            Bitmap bitmap = getFromMemory(sceneName);
+            if (bitmap != null) {
+                return bitmap;
+            }
+            bitmap = getFromFile(sceneName);
+            if (bitmap != null) {
+                return bitmap;
+            }
+            bitmap = getFromInternet(sceneName);
+            return bitmap;
+        }
+
+        private Bitmap getFromFile(String sceneName) {
+            Bitmap bitmap = null;
+            File mapFile = new File(mActivity.getFilesDir(), sceneName + ".jpg");
+            if (mapFile.exists()) {
+                try (InputStream in = new FileInputStream(mapFile)) {
+                    bitmap = BitmapFactory.decodeStream(in);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            addToCache(sceneName, bitmap);
+            return bitmap;
+        }
+
+        private Bitmap getFromInternet(String sceneName) {
+            boolean isSucceed = false;
+            Message msg = Message.obtain();
+            try {
+                isSucceed = HttpUtils.downloadMap(sceneName, mActivity);
+            } catch (UnauthorizedException e) {
+                e.printStackTrace();
+                msg.obj = PositioningResponse.UNAUTHORIZED;
+                mActivity.getMyHandler().sendMessage(msg);
+            }
+            if (!isSucceed) {
+                msg.obj = PositioningResponse.NETWORK_ERROR;
+                mActivity.getMyHandler().sendMessage(msg);
+            }
+            msg.obj = PositioningResponse.DOWNLOAD_MAP_SUCCEED;
             mActivity.getMyHandler().sendMessage(msg);
+            return getFromFile(sceneName);
+        }
+
+        private Bitmap getFromMemory(String sceneName) {
+            return memoryCache.get(sceneName);
+        }
+
+        private File getFile(String sceneName) {
+            return new File(mActivity.getFilesDir(), sceneName + ".jpg");
+        }
+
+        private boolean isFileUpToDate(File file, long lastUpdateTime) {
+            return !preferences.getAutoUpdateMap() || file.lastModified() > lastUpdateTime;
         }
 
     }
