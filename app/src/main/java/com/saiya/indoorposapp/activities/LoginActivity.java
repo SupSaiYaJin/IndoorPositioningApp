@@ -98,9 +98,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             case R.id.menu_login_setip:
                 if (setIpDialog == null) {
                     edtTxt_setIp = new EditText(this);
+                    edtTxt_setIp.setText(activityPreferences.getString("lastServerIp", ""));
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle(R.string.menu_login_setip);
                     builder.setView(edtTxt_setIp);
+                    builder.setCancelable(false);
                     builder.setPositiveButton(R.string.fragment_settings_confirm,
                             new DialogInterface.OnClickListener() {
                         @Override
@@ -139,6 +141,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         btn_login_login.setOnClickListener(this);
         btn_login_register.setOnClickListener(this);
 
+        //得到上次登录成功的服务器Ip并设置
+        String lastServerIp = activityPreferences.getString("lastServerIp", "");
+        if (!lastServerIp.equals("")) {
+            HttpUtils.setServerIp(lastServerIp);
+        }
         /** 上次登录成功的用户名 */
         String lastusername = activityPreferences.getString("lastusername", "");
         //若上次成功登录的用户名不为空,则得到那个用户的SharedPreferences
@@ -207,6 +214,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 if (loginResult == AuthResponse.LOGIN_SUCCEED) {
                     SharedPreferences.Editor editor = activityPreferences.edit();
                     editor.putString("lastusername", username);
+                    if (edtTxt_setIp != null && !edtTxt_setIp.getText().toString().equals("")) {
+                        editor.putString("lastServerIp", edtTxt_setIp.getText().toString());
+                    }
                     editor.apply();
                     editor = getSharedPreferences(username + "-settings", MODE_PRIVATE).edit();
                     editor.putString("username", username);
