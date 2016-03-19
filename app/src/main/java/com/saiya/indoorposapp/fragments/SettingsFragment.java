@@ -284,11 +284,16 @@ public class SettingsFragment extends Fragment
         builder.setPositiveButton(R.string.fragment_settings_confirm, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                HttpUtils.logout();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        HttpUtils.logout();
+                    }
+                }).start();
+                mActivity.finish();
                 Intent intent = new Intent(mActivity, LoginActivity.class);
                 intent.putExtra("allowedAutoLogin", false);
                 startActivity(intent);
-                mActivity.finish();
             }
         });
         builder.setNegativeButton(R.string.fragment_settings_cancel, null);

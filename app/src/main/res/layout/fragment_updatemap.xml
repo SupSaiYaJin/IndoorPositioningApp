@@ -89,7 +89,6 @@
             android:layout_weight="1"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
-            style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
             android:text="@string/fragment_updateMap_chooseSceneName"
             android:textColor="@color/black"/>
@@ -101,7 +100,6 @@
             android:layout_weight="1"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
-            style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
             android:text="@string/fragment_updateMap_chooseFile"
             android:textColor="@color/black"/>
@@ -113,7 +111,6 @@
             android:layout_weight="1"
             android:layout_marginLeft="8dp"
             android:layout_marginRight="8dp"
-            style="?android:buttonBarButtonStyle"
             android:background="@drawable/common_btn_style"
             android:text="@string/fragment_updateMap_confirm"
             android:textColor="@color/black"/>

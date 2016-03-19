@@ -28,7 +28,7 @@ import java.util.UUID;
 public class HttpUtils {
 
     /** 服务器IP地址 */
-    private static String serverIp = "192.168.1.104";
+    private static String serverIp = "10.210.42.108";
     /** 服务器地址,实验室IP为http://10.107.34.169 家里IP为192.168.1.104:8080 */
     private static String serverUrl = "http://" + serverIp + ":8080";
     /** 注册请求的服务器路径 */

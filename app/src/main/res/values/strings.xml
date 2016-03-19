@@ -27,11 +27,12 @@
     <string name="activity_register_succeed">注册成功!请登录!</string>
     <string name="activity_register_duplicateUsername">您的用户名已被注册!</string>
 
-    <string name="fragment_positioning_downloadingMap">正在下载地图…</string>
+    <string name="fragment_positioning_downloadingMap">正在加载地图…</string>
     <string name="fragment_positioning_downloadMapSucceed">下载地图成功!</string>
     <string name="fragment_positioning_positioningStarted">定位已开始!</string>
     <string name="fragment_positioning_positioningRunning">请先停止定位再切换场景!</string>
     <string name="fragment_positioning_positioningStoped">定位已停止!</string>
+    <string name="fragment_positioning_plzChooseScene">请先选择场景!</string>
 
     <string name="fragment_updateFP_coord">坐标</string>
     <string name="fragment_updateFP_coordXHint">请输入X坐标:</string>

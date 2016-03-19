@@ -6,7 +6,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.v4.app.Fragment;
@@ -24,7 +27,6 @@ import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -70,9 +72,33 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         btn_updateMap_chooseSceneName.setOnClickListener(this);
         btn_updateMap_chooseFile.setOnClickListener(this);
         btn_updateMap_confirm.setOnClickListener(this);
-        edtTxt_updateMap_sceneName.setText(R.string.activity_main_defaultScene);
-        progressDialog = new ProgressDialog(mActivity);
     }
+
+    /**
+     * 计算图片压缩比
+     * @param options 带有原图片的信息
+     * @param reqWidth 希望压缩的宽度
+     * @param reqHeight 希望压缩的高度
+     * @return 返回图片压缩比
+     */
+    public static int calculateInSampleSize(BitmapFactory.Options options,
+                                            int reqWidth, int reqHeight) {
+        //源图片的高度和宽度
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+        if (height > reqHeight || width > reqWidth) {
+            //计算出实际宽高和目标宽高的比率
+            //选择宽和高中最小的比率作为inSampleSize的值,这样可以保证最终图片的宽和高都会大于等于目标的宽和高.
+            if (width > height) {
+                inSampleSize = Math.round((float) height / (float) reqHeight);
+            } else {
+                inSampleSize = Math.round((float) width / (float) reqWidth);
+            }
+        }
+        return inSampleSize;
+    }
+
 
     /**
      * 点击选择场景后触发的事件
@@ -96,74 +122,101 @@ public class UpdateMapFragment extends Fragment implements View.OnClickListener{
         startActivityForResult(intent, 1);
     }
 
-    //创建一个进度条对话框
-    private ProgressDialog progressDialog;
+    class UpdateMapTask extends AsyncTask<String, Void, PositioningResponse> {
+
+        private ProgressDialog mProgressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog = new ProgressDialog(mActivity);
+            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            mProgressDialog.setMessage(getString(R.string.fragment_updateMap_updating));
+            mProgressDialog.setCancelable(false);
+            mProgressDialog.setCanceledOnTouchOutside(false);
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected PositioningResponse doInBackground(String... params) {
+            //将比例尺转为float
+            float scale;
+            if (params[1].length() != 0) {
+                scale = Float.parseFloat(params[1]);
+            } else {
+                scale = 0;
+            }
+            File file = new File(params[2]);
+            InputStream in = null;
+            OutputStream out = null;
+            try {
+                in = new FileInputStream(file);
+                out = mActivity.openFileOutput(params[0] + ".jpg", Context.MODE_PRIVATE);
+                BitmapFactory.Options opt = new BitmapFactory.Options();
+                opt.inJustDecodeBounds = true;
+                BitmapFactory.decodeStream(in, null, opt);
+                in.close();
+                opt.inSampleSize = calculateInSampleSize(opt, 600, 1000);
+                opt.inJustDecodeBounds = false;
+                in = new FileInputStream(file);
+                BitmapFactory.decodeStream(in, null, opt).compress(Bitmap.CompressFormat.JPEG, 80, out);
+                scale /= opt.inSampleSize;
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(mActivity, R.string.fragment_updateMap_streamFailed, Toast.LENGTH_SHORT).show();
+                return null;
+            } finally {
+                try {
+                    if (in != null) {
+                        in.close();
+                    }
+                    if (out != null) {
+                        out.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            boolean uploadResult;
+            try (InputStream fileInputStream = mActivity.openFileInput(params[0] + ".jpg")){
+                uploadResult = HttpUtils.uploadMap(params[0], scale, fileInputStream);
+                if (uploadResult) {
+                    return PositioningResponse.UPDATE_MAP_SUCCEED;
+                } else {
+                    return PositioningResponse.NETWORK_ERROR;
+                }
+            } catch (UnauthorizedException e) {
+                e.printStackTrace();
+                return PositioningResponse.UNAUTHORIZED;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(PositioningResponse response) {
+            if (response != null) {
+                Message msg = Message.obtain();
+                msg.obj = response;
+                mActivity.getMyHandler().sendMessage(msg);
+            }
+            mProgressDialog.dismiss();
+        }
+    }
     /**
      * 点击上传地图后触发的事件
      */
     private void confirmOnClick() {
         //获取用户输入的参数
-        final String sceneName = edtTxt_updateMap_sceneName.getText().toString();
+        String sceneName = edtTxt_updateMap_sceneName.getText().toString();
         String scaleStr = edtTxt_updateMap_scale.getText().toString();
         String filePath = edtTxt_updateMap_filePath.getText().toString();
         //检查参数是否合法
-        if (sceneName.equals(getString(R.string.activity_main_defaultScene)) || sceneName.length() == 0 || filePath.length() == 0) {
+        if (sceneName.equals("") || sceneName.length() == 0 || filePath.length() == 0) {
             Toast.makeText(mActivity, R.string.fragment_updateMap_confirmFailed, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        //将比例尺转为float
-        final float scale;
-        if (scaleStr.length() != 0) {
-            scale = Float.parseFloat(scaleStr);
         } else {
-            scale = 0;
+            new UpdateMapTask().execute(sceneName, scaleStr, filePath);
         }
-        File file = new File(filePath);
-        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
-                OutputStream out = mActivity.openFileOutput(sceneName + ".jpg", Context.MODE_PRIVATE)) {
-            int bufSize = 1024;
-            byte[] buffer = new byte[bufSize];
-            int len;
-            while ((len = in.read(buffer,0,bufSize)) != -1) {
-                out.write(buffer,0,len);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            Toast.makeText(mActivity, R.string.fragment_updateMap_streamFailed, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.setMessage(getString(R.string.fragment_updateMap_updating));
-        progressDialog.setCancelable(false);
-        progressDialog.setCanceledOnTouchOutside(false);
-        progressDialog.show();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                boolean uploadResult;
-                try (InputStream in = mActivity.openFileInput(sceneName + ".jpg")){
-                    uploadResult = HttpUtils.uploadMap(sceneName, scale, in);
-                    if (uploadResult) {
-                        Message msg = new Message();
-                        msg.obj = PositioningResponse.UPDATE_MAP_SUCCEED;
-                        mActivity.getMyHandler().sendMessage(msg);
-                    } else {
-                        Message msg = new Message();
-                        msg.obj = PositioningResponse.NETWORK_ERROR;
-                        mActivity.getMyHandler().sendMessage(msg);
-                    }
-                } catch (UnauthorizedException e) {
-                    e.printStackTrace();
-                    Message msg = new Message();
-                    msg.obj = PositioningResponse.UNAUTHORIZED;
-                    mActivity.getMyHandler().sendMessage(msg);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    progressDialog.dismiss();
-                }
-            }
-        }).start();
     }
 
     //处理按钮被点击时触发的事件

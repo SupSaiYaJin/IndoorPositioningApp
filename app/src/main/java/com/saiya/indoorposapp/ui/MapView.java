@@ -19,8 +19,6 @@ import com.saiya.indoorposapp.R;
  * 缩放图片控件
  */
 public class MapView extends ImageView {
-    /** 模板Matrix,用以初始化 */
-    private Matrix mMatrix;
     /** 图片长度*/
     private int mImageWidth;
     /** 图片高度 */
@@ -88,7 +86,8 @@ public class MapView extends ImageView {
     private void initData() {
         int vwidth = getWidth();
         int vheight = getHeight();
-        mMatrix = new Matrix();
+        /* 模板Matrix,用以初始化 */
+        Matrix mMatrix = new Matrix();
         float dx = 0, dy = 0;
         if (mImageWidth * vheight > vwidth * mImageHeight) {
             mScale = (float) vheight / (float) mImageHeight;
@@ -117,17 +116,17 @@ public class MapView extends ImageView {
         }
     }
 
+    private float[] mTempValues = new float[9];
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         mCurrentMatrix.set(getImageMatrix());
-        float values[] = new float[9];
-        mCurrentMatrix.getValues(values);
-        float currentScale = values[Matrix.MSCALE_X];
+        mCurrentMatrix.getValues(mTempValues);
+        float currentScale = mTempValues[Matrix.MSCALE_X];
         float scaledIndicatorLeft =
-                indicatorX * mapScale * currentScale + values[Matrix.MTRANS_X] - 32;
+                indicatorX * mapScale * currentScale + mTempValues[Matrix.MTRANS_X] - 32;
         float scaledIndicatorTop =
-                indicatorY * mapScale * currentScale + values[Matrix.MTRANS_Y] - 32;
+                indicatorY * mapScale * currentScale + mTempValues[Matrix.MTRANS_Y] - 32;
         mIndicatorRect.set(scaledIndicatorLeft, scaledIndicatorTop,
                 scaledIndicatorLeft + 64, scaledIndicatorTop + 64);
         canvas.drawBitmap(mIndicatorBitmap, null, mIndicatorRect, null);
@@ -145,7 +144,11 @@ public class MapView extends ImageView {
         /**
          * 最大缩放级别
          */
-        float mMaxScale = 6;
+        private float mMaxScale = 6;
+        /**
+         * 最小缩放级别
+         */
+        private float mMinScale = 0.7f;
         private int mMode = 0;
         /**
          * 缩放开始时的手指间距
@@ -169,6 +172,8 @@ public class MapView extends ImageView {
         boolean mFirstMove = false;
         private PointF mStartPoint = new PointF();
 
+        private float[] tempValues = new float[9];
+
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             switch (event.getActionMasked()) {
@@ -181,7 +186,6 @@ public class MapView extends ImageView {
                     break;
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_CANCEL:
-                    resetMatrix();
                     stopDrag();
                     break;
                 case MotionEvent.ACTION_MOVE:
@@ -231,14 +235,13 @@ public class MapView extends ImageView {
             mLeftDragable = true;
             mRightDragable = true;
             mFirstMove = true;
-            float[] values = new float[9];
-            getImageMatrix().getValues(values);
+            getImageMatrix().getValues(tempValues);
             //图片左边缘离开左边界，表示不可右移
-            if (values[Matrix.MTRANS_X] >= 0) {
+            if (tempValues[Matrix.MTRANS_X] >= 0) {
                 mRightDragable = false;
             }
             //图片右边缘离开右边界，表示不可左移
-            if (values[Matrix.MTRANS_X] <= getWidth() - mImageWidth * values[Matrix.MSCALE_X]) {
+            if (tempValues[Matrix.MTRANS_X] <= getWidth() - mImageWidth * tempValues[Matrix.MSCALE_X]) {
                 mLeftDragable = false;
             }
         }
@@ -256,10 +259,9 @@ public class MapView extends ImageView {
                 mStartPoint.set(event.getX(), event.getY());
                 //在当前基础上移动
                 mCurrentMatrix.set(getImageMatrix());
-                float[] values = new float[9];
-                mCurrentMatrix.getValues(values);
-                dy = checkDyBound(values, dy);
-                dx = checkDxBound(values, dx, dy);
+                mCurrentMatrix.getValues(tempValues);
+                dy = checkDyBound(tempValues, dy);
+                dx = checkDxBound(tempValues, dx, dy);
                 mCurrentMatrix.postTranslate(dx, dy);
                 setImageMatrix(mCurrentMatrix);
             }
@@ -274,14 +276,20 @@ public class MapView extends ImageView {
          */
         private float checkDyBound(float[] values, float dy) {
             float height = getHeight();
-            if (mImageHeight * values[Matrix.MSCALE_Y] < height) {
-                return 0;
-            }
-            if (values[Matrix.MTRANS_Y] + dy > 0) {
-                dy = -values[Matrix.MTRANS_Y];
-            } else if
-            (values[Matrix.MTRANS_Y] + dy < -(mImageHeight * values[Matrix.MSCALE_Y] - height)) {
-                dy = -(mImageHeight * values[Matrix.MSCALE_Y] - height) - values[Matrix.MTRANS_Y];
+            if (values[Matrix.MSCALE_X] >= mScale) {
+                if (values[Matrix.MTRANS_Y] + dy > 0) {
+                    dy = -values[Matrix.MTRANS_Y];
+                }
+                if (values[Matrix.MTRANS_Y] + dy < height - mImageHeight * values[Matrix.MSCALE_Y]) {
+                    dy = height - mImageHeight * values[Matrix.MSCALE_Y] - values[Matrix.MTRANS_Y];
+                }
+            } else {
+                if (values[Matrix.MTRANS_Y] + dy < 0) {
+                    dy = -values[Matrix.MTRANS_Y];
+                }
+                if (values[Matrix.MTRANS_Y] + dy > height - mImageHeight * values[Matrix.MSCALE_Y]) {
+                    dy = height - mImageHeight * values[Matrix.MSCALE_Y] - values[Matrix.MTRANS_Y];
+                }
             }
             return dy;
         }
@@ -341,11 +349,13 @@ public class MapView extends ImageView {
                 float scale = endDis / mStartDis;// 得到缩放倍数
                 mStartDis = endDis;//重置距离
                 mCurrentMatrix.set(getImageMatrix());//初始化Matrix
-                float[] values = new float[9];
-                mCurrentMatrix.getValues(values);
-                scale = checkMaxScale(scale, values);
-                PointF centerF = getCenter(scale, values);
+                mCurrentMatrix.getValues(tempValues);
+                scale = checkScale(scale, tempValues);
+                PointF centerF = getCenter(scale, tempValues);
                 mCurrentMatrix.postScale(scale, scale, centerF.x, centerF.y);
+                if (scale * tempValues[Matrix.MSCALE_X] < mScale) {
+                    mCurrentMatrix.postTranslate(-tempValues[Matrix.MTRANS_X], 0);
+                }
                 setImageMatrix(mCurrentMatrix);
             }
         }
@@ -383,49 +393,14 @@ public class MapView extends ImageView {
          * @param values 当前矩阵的值
          * @return 优化后的scale
          */
-        private float checkMaxScale(float scale, float[] values) {
+        private float checkScale(float scale, float[] values) {
             if (scale * values[Matrix.MSCALE_X] > mMaxScale) {
                 scale = mMaxScale / values[Matrix.MSCALE_X];
             }
-            return scale;
-        }
-
-        /**
-         * 重置Matrix
-         */
-        private void resetMatrix() {
-            if (checkRest()) {
-                mCurrentMatrix.set(mMatrix);
-                setImageMatrix(mCurrentMatrix);
-            } else {
-                //判断Y轴是否需要更正
-                float[] values = new float[9];
-                getImageMatrix().getValues(values);
-                float height = mImageHeight * values[Matrix.MSCALE_Y];
-                if (height < getHeight()) {
-                    //在图片真实高度小于容器高度时，Y轴居中，Y轴理想偏移量为两者高度差/2，
-                    float topMargin = (getHeight() - height) / 2;
-                    if (topMargin != values[Matrix.MTRANS_Y]) {
-                        mCurrentMatrix.set(getImageMatrix());
-                        mCurrentMatrix.postTranslate(0, topMargin - values[Matrix.MTRANS_Y]);
-                        setImageMatrix(mCurrentMatrix);
-                    }
-                }
+            if (scale * values[Matrix.MSCALE_X] < mMinScale) {
+                scale = mMinScale / values[Matrix.MSCALE_X];
             }
-        }
-
-        /**
-         * 判断是否需要重置
-         *
-         * @return 当前缩放级别小于模板缩放级别时，重置
-         */
-        private boolean checkRest() {
-            float[] values = new float[9];
-            getImageMatrix().getValues(values);
-            //获取当前X轴缩放级别
-            float scale = values[Matrix.MSCALE_X];
-            //获取模板的X轴缩放级别，两者做比较
-            return scale < mScale;
+            return scale;
         }
 
         /**

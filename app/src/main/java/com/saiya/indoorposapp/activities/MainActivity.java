@@ -50,6 +50,9 @@ import java.util.List;
 public class MainActivity extends FragmentActivity
         implements OnPageChangeListener, OnClickListener, SensorEventListener{
 
+    /** 加速度阈值,超过则判定为移动了 */
+    private static final float accThreshold = 1.6f;
+
     //用于显示Fragment
     private MyViewPager vp_main_pager;
 
@@ -350,8 +353,6 @@ public class MainActivity extends FragmentActivity
     private float[] aValues = new float[3];
     /** 用于存储地磁传感器的值 */
     private float[] mValues = new float[3];
-    /** 上次发起定位的时间 */
-    private long lastLocateTime = 0;
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -376,14 +377,6 @@ public class MainActivity extends FragmentActivity
             fixedMagValues[0] = r[3] * mValues[0] + r[4] * mValues[1] + r[5] * mValues[2];
             fixedMagValues[1] = r[6] * mValues[0] + r[7] * mValues[1] + r[8] * mValues[2];
         }
-        long currentTime = System.currentTimeMillis();
-        /** 最长空闲时间 */
-        final long maxIdleTime = 1000 * 30;
-        if (currentTime - lastLocateTime > maxIdleTime) {
-            isMoved = true;
-        }
-        /** 加速度阈值,超过则判定为移动了 */
-        final float accThreshold = 1.6f;
         if (fixedAccValues[0] + fixedAccValues[1] + fixedAccValues[2] > accThreshold) {
             isMoved = true;
         }
@@ -398,12 +391,7 @@ public class MainActivity extends FragmentActivity
     /** 指示是否需要进行定位 */
     private boolean isMoved;
     public boolean isMoved() {
-        if (isMoved) {
-            lastLocateTime = System.currentTimeMillis();
-        }
-        boolean temp = isMoved;
-        isMoved = false;
-        return temp;
+        return isMoved;
     }
 
     @Override

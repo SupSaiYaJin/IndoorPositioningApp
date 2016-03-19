@@ -22,8 +22,8 @@ import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
 import com.saiya.indoorposapp.tools.postioning.Algorithms;
+import com.saiya.indoorposapp.tools.postioning.AverageFilter;
 import com.saiya.indoorposapp.tools.postioning.Filter;
-import com.saiya.indoorposapp.tools.postioning.KalmanFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -137,7 +137,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
 
         private ProgressDialog progressDialog;
         private String sceneName;
-        private Filter filter = new KalmanFilter(4, 3);
+        private Filter filter = new AverageFilter();
 
         @Override
         protected void onPreExecute() {
@@ -224,7 +224,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         @Override
         protected void onPostExecute(PositioningResponse response) {
             progressDialog.dismiss();
-            Message msg = new Message();
+            Message msg = Message.obtain();
             msg.obj = response;
             mActivity.getMyHandler().sendMessage(msg);
         }
@@ -298,7 +298,7 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
         @Override
         protected void onPostExecute(PositioningResponse response) {
             progressDialog.dismiss();
-            Message msg = new Message();
+            Message msg = Message.obtain();
             msg.obj = response;
             mActivity.getMyHandler().sendMessage(msg);
         }
