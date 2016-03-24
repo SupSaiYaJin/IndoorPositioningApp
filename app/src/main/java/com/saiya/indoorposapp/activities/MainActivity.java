@@ -2,6 +2,7 @@ package com.saiya.indoorposapp.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -17,6 +18,7 @@ import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -33,7 +35,7 @@ import com.saiya.indoorposapp.fragments.UpdateMapFragment;
 import com.saiya.indoorposapp.tools.ActivityCollector;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
-import com.saiya.indoorposapp.tools.PreferencessHelper;
+import com.saiya.indoorposapp.tools.PreferencesHelper;
 import com.saiya.indoorposapp.ui.BottomTabView;
 import com.saiya.indoorposapp.ui.MyViewPager;
 
@@ -67,11 +69,17 @@ public class MainActivity extends FragmentActivity
     /** 磁场强度,float[0]为Y方向,float[1]为Z方向 */
     private float[] mGeomagneticRSS;
     /** 用户设置信息帮助类 */
-    private PreferencessHelper mPreferences;
+    private PreferencesHelper mPreferences;
     /** 处理异步更新UI的Handler实例 */
     private MyHandler myHandler;
 
-    public PreferencessHelper getPreferences() {
+    public static void start(Context context, String userName) {
+        Intent starter = new Intent(context, MainActivity.class);
+        starter.putExtra("username", userName);
+        context.startActivity(starter);
+    }
+
+    public PreferencesHelper getPreferences() {
         return mPreferences;
     }
 
@@ -244,7 +252,7 @@ public class MainActivity extends FragmentActivity
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         myHandler = new MyHandler(this);
         mWifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
-        mPreferences = new PreferencessHelper(username, this);
+        mPreferences = new PreferencesHelper(username, this);
         ActivityCollector.addActivity(this);
     }
 
@@ -331,7 +339,14 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onPageScrollStateChanged(int state) {
-
+        switch(state) {
+            case ViewPager.SCROLL_STATE_IDLE:
+                resetOtherTabs();
+                mTabIndicator.get(vp_main_pager.getCurrentItem()).setIconAlpha(1.0f);
+                break;
+            default:
+                break;
+        }
     }
 
     /**
@@ -396,24 +411,19 @@ public class MainActivity extends FragmentActivity
 
     @Override
     public void onClick(View v) {
-
-        resetOtherTabs();
+        
         switch (v.getId()) {
             case R.id.btv_main_positioning:
-                mTabIndicator.get(0).setIconAlpha(1.0f);
-                vp_main_pager.setCurrentItem(0, false);
+                vp_main_pager.setCurrentItem(0, true);
                 break;
             case R.id.btv_main_updatefingerprint:
-                mTabIndicator.get(1).setIconAlpha(1.0f);
-                vp_main_pager.setCurrentItem(1, false);
+                vp_main_pager.setCurrentItem(1, true);
                 break;
             case R.id.btv_main_updatemap:
-                mTabIndicator.get(2).setIconAlpha(1.0f);
-                vp_main_pager.setCurrentItem(2, false);
+                vp_main_pager.setCurrentItem(2, true);
                 break;
             case R.id.btv_main_settings:
-                mTabIndicator.get(3).setIconAlpha(1.0f);
-                vp_main_pager.setCurrentItem(3, false);
+                vp_main_pager.setCurrentItem(3, true);
             default:
                 break;
         }

@@ -1,6 +1,8 @@
 package com.saiya.indoorposapp.fragments;
 
 
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
@@ -20,7 +23,7 @@ import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
-import com.saiya.indoorposapp.tools.PreferencessHelper;
+import com.saiya.indoorposapp.tools.PreferencesHelper;
 import com.saiya.indoorposapp.ui.MapView;
 
 import java.io.File;
@@ -55,7 +58,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
     /** 指示定位是否正在进行中 */
     private boolean isRunning = false;
     /** 得到当前用户的设置文件 */
-    private PreferencessHelper preferences;
+    private PreferencesHelper preferences;
     /** 显示地图的MapView */
     private MapView mv_positioning_map;
     /** 定位的场景名 */
@@ -165,6 +168,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         Button btn_positioning_start = (Button) mActivity.findViewById(R.id.btn_positioning_start);
         Button btn_positioning_stop = (Button) mActivity.findViewById(R.id.btn_positioning_stop);
         Button btn_positioning_switch = (Button) mActivity.findViewById(R.id.btn_positioning_switch);
+        LinearLayout ll_positioning_bar = (LinearLayout) mActivity.findViewById(R.id.ll_positioning_bar);
         btn_positioning_start.setOnClickListener(this);
         btn_positioning_stop.setOnClickListener(this);
         btn_positioning_switch.setOnClickListener(this);
@@ -175,6 +179,14 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         if (mSceneName != null && mMapScale != 0f) {
             new SetMapTask().execute(new SceneInfo(mSceneName, mMapScale, 0));
         }
+        PropertyValuesHolder scaleX = PropertyValuesHolder.ofFloat("scaleX", 0, 1);
+        PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat("scaleY", 0, 1);
+        PropertyValuesHolder alpha = PropertyValuesHolder.ofFloat("alpha", 0, 0.5f);
+        PropertyValuesHolder translationY = PropertyValuesHolder.ofFloat("translationY", 800, 0);
+        ObjectAnimator objectAnimator = ObjectAnimator.ofPropertyValuesHolder(ll_positioning_bar,
+                scaleX, scaleY, alpha, translationY);
+        objectAnimator.setDuration(2000);
+        objectAnimator.start();
     }
 
     /**

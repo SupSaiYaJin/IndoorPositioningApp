@@ -8,11 +8,11 @@ import com.saiya.indoorposapp.fragments.PositioningFragment;
 /**
  * 用户的SharedPreferences工具类
  */
-public class PreferencessHelper {
+public class PreferencesHelper {
     
     private SharedPreferences preferences;
     
-    public PreferencessHelper(String userName, Context context) {
+    public PreferencesHelper(String userName, Context context) {
         preferences = context.getSharedPreferences(userName + "-settings", Context.MODE_PRIVATE);
     }
 

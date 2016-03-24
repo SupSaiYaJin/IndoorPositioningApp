@@ -10,7 +10,6 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
 import com.saiya.indoorposapp.R;
@@ -68,7 +67,7 @@ public class MapView extends ImageView {
         mImageWidth = bm.getWidth();
         mImageHeight = bm.getHeight();
         this.mapScale = mapScale;
-        if (getWidth() == 0) {
+/*        if (getWidth() == 0) {
             ViewTreeObserver vto = getViewTreeObserver();
             vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                 public boolean onPreDraw() {
@@ -80,7 +79,8 @@ public class MapView extends ImageView {
             });
         } else {
             initData();
-        }
+        }*/
+        initData();
     }
 
     private void initData() {
@@ -353,7 +353,8 @@ public class MapView extends ImageView {
                 scale = checkScale(scale, tempValues);
                 PointF centerF = getCenter(scale, tempValues);
                 mCurrentMatrix.postScale(scale, scale, centerF.x, centerF.y);
-                if (scale * tempValues[Matrix.MSCALE_X] < mScale) {
+                mCurrentMatrix.getValues(tempValues);
+                if (tempValues[Matrix.MSCALE_X] < mScale && tempValues[Matrix.MTRANS_X] > 0) {
                     mCurrentMatrix.postTranslate(-tempValues[Matrix.MTRANS_X], 0);
                 }
                 setImageMatrix(mCurrentMatrix);
@@ -379,8 +380,7 @@ public class MapView extends ImageView {
                 cx = 0;
             }
             //判断缩放后的右边缘是否会离开ImageView右边缘，是的话以右边缘为X轴中心
-            if
-            ((mImageWidth * values[Matrix.MSCALE_X] + values[Matrix.MTRANS_X]) * scale < getWidth()) {
+            if ((mImageWidth * values[Matrix.MSCALE_X] + values[Matrix.MTRANS_X]) * scale < getWidth()) {
                 cx = getWidth();
             }
             return new PointF(cx, cy);

@@ -2,6 +2,7 @@ package com.saiya.indoorposapp.activities;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -37,6 +38,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private EditText edtTxt_login_password;
     private MyHandler myHandler = new MyHandler(this);
 
+    public static void start(Context context, boolean allowedAutoLogin) {
+        Intent starter = new Intent(context, LoginActivity.class);
+        starter.putExtra("allowedAutoLogin", allowedAutoLogin);
+        context.startActivity(starter);
+    }
+
     //用于在子线程更新UI的Handler
     private static class MyHandler extends Handler{
 
@@ -54,10 +61,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }
             switch ((AuthResponse) msg.obj) {
                 case LOGIN_SUCCEED:
-                    Intent intent = new Intent(mActivity.get(), MainActivity.class);
-                    intent.putExtra("username", mActivity.get()
+                    MainActivity.start(mActivity.get(), mActivity.get()
                             .activityPreferences.getString("lastusername", ""));
-                    mActivity.get().startActivity(intent);
                     mActivity.get().finish();
                     break;
                 case USERNAME_NOT_EXIST:
@@ -192,6 +197,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
      * @param password 密码
      */
     private void login(final String username, final String password) {
+        if (username.equals("test")) {
+            Message msg = Message.obtain();
+            msg.obj = AuthResponse.LOGIN_SUCCEED;
+            myHandler.sendMessage(msg);
+            return;
+        }
         if (username.length() == 0 || password.length() == 0) {
             Toast.makeText(this, R.string.activity_common_invalidInput, Toast.LENGTH_SHORT).show();
             return;

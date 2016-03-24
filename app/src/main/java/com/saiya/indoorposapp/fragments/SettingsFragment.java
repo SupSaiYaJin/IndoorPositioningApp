@@ -2,7 +2,6 @@ package com.saiya.indoorposapp.fragments;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -19,7 +18,7 @@ import com.saiya.indoorposapp.R;
 import com.saiya.indoorposapp.activities.LoginActivity;
 import com.saiya.indoorposapp.activities.MainActivity;
 import com.saiya.indoorposapp.tools.HttpUtils;
-import com.saiya.indoorposapp.tools.PreferencessHelper;
+import com.saiya.indoorposapp.tools.PreferencesHelper;
 import com.saiya.indoorposapp.ui.SeekbarSettingDialog;
 
 import java.io.File;
@@ -35,7 +34,7 @@ public class SettingsFragment extends Fragment
     /** 最小定位间隔 */
     private final static int LOCATION_INTERVAL_MIN = 500;
     /** 用户设置帮助对象 */
-    private PreferencessHelper preferences;
+    private PreferencesHelper preferences;
     /** 最小采集次数 */
     private final static int NUMBER_OF_ACQUISITION_MIN = 5;
 
@@ -291,9 +290,7 @@ public class SettingsFragment extends Fragment
                     }
                 }).start();
                 mActivity.finish();
-                Intent intent = new Intent(mActivity, LoginActivity.class);
-                intent.putExtra("allowedAutoLogin", false);
-                startActivity(intent);
+                LoginActivity.start(mActivity, false);
             }
         });
         builder.setNegativeButton(R.string.fragment_settings_cancel, null);

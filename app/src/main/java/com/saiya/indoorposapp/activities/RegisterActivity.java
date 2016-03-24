@@ -2,7 +2,6 @@ package com.saiya.indoorposapp.activities;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -45,8 +44,7 @@ public class RegisterActivity extends Activity implements View.OnClickListener{
             switch ((AuthResponse) msg.obj) {
                 case REGISTER_SUCCEED:
                     Toast.makeText(mActivity.get(), R.string.activity_register_succeed, Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(mActivity.get(), LoginActivity.class);
-                    mActivity.get().startActivity(intent);
+                    LoginActivity.start(mActivity.get(), false);
                     mActivity.get().finish();
                     break;
                 case DUPLICATE_USERNAME:
