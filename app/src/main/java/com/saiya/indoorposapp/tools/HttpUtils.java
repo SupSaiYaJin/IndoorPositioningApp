@@ -37,6 +37,8 @@ public class HttpUtils {
     private static final String LOGIN_PATH = "/login";
     /** 注销请求的服务器路径 */
     private static final String LOGOUT_PATH = "/logout";
+    /** 获取终端所在场景的服务器路径 */
+    private static final String LOCATE_SCENE_PATH = "/positioning/locatescene";
     /** 获取场景列表的服务器路径 */
     private static final String GET_SCENE_LIST_PATH = "/positioning/getscenelist";
     /** 下载场景地图的服务器路径 */
@@ -171,6 +173,16 @@ public class HttpUtils {
 
     }
 
+    /**
+     * 获取终端所在场景信息
+     * @param mac 终端采集到的MAC地址
+     * @return 终端所在场景对象
+     */
+    public static SceneInfo locateScene(String mac) throws UnauthorizedException {
+        Map<String, String> requestPropertyMap = new HashMap<>();
+        requestPropertyMap.put("mac", mac);
+        return JSONHelper.getLocateScene(doPost(LOCATE_SCENE_PATH, requestPropertyMap));
+    }
     /**
      * 向服务器发起获取场景列表的请求,因不用更新服务器数据,故使用Get方法
      * @return 返回Map,String为场景名,Long为对应场景的最后更新时间

@@ -53,42 +53,6 @@ public class PreferencesHelper {
     }
 
     /**
-     * 获取上次定位的场景名称
-     * @return 场景名
-     */
-    public String getLastSceneName() {
-        return preferences.getString("lastSceneName", "");
-    }
-
-    /**
-     * 设置上次定位的场景名称
-     * @param value 场景名
-     */
-    public void setLastSceneName(String value) {
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("lastSceneName", value);
-        editor.apply();
-    }
-
-    /**
-     * 获取上次定位的场景的比例尺
-     * @return 比例尺
-     */
-    public float getLastSceneScale() {
-        return preferences.getFloat("lastSceneScale", 0f);
-    }
-
-    /**
-     * 设置上次定位的场景的比例尺
-     * @param value 比例尺
-     */
-    public void setLastSceneScale(float value) {
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putFloat("lastSceneScale", value);
-        editor.apply();
-    }
-
-    /**
      * 获取定位方法的设置值
      * @return 返回值由PositioningFragment中的int常量定义
      */

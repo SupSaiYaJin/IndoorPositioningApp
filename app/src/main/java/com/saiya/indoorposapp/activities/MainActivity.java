@@ -435,13 +435,18 @@ public class MainActivity extends FragmentActivity
      * @return WiFi开启则返回true
      */
     public boolean checkWifiState() {
-        return mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED;
+        if (mWifiManager.getWifiState() == WifiManager.WIFI_STATE_ENABLED) {
+            return true;
+        } else {
+            Toast.makeText(this, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
+            return false;
+        }
     }
     private String[] wifiScanResultOfN = new String[2];
     /**
      * 获取信号强度最强的前n个WiFi信息
      * @param n 指定获取WiFi信息的最大个数,
-     * @return 返回Bundle,其中mac字段存储了MAC地址,rssi字段存储了RSSI数据,都是用逗号拼接的String.
+     * @return 返回String[],其中mac字段存储了MAC地址,rssi字段存储了RSSI数据,都是用逗号拼接的String.
      * 若WiFi未打开返回null.
      */
     public String[] getWifiScanResult(int n) {
