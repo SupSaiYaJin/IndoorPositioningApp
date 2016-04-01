@@ -8,11 +8,11 @@ import com.saiya.indoorposapp.fragments.PositioningFragment;
 /**
  * 用户的SharedPreferences工具类
  */
-public class PreferencessHelper {
+public class PreferencesHelper {
     
     private SharedPreferences preferences;
     
-    public PreferencessHelper(String userName, Context context) {
+    public PreferencesHelper(String userName, Context context) {
         preferences = context.getSharedPreferences(userName + "-settings", Context.MODE_PRIVATE);
     }
 
@@ -49,42 +49,6 @@ public class PreferencessHelper {
     public void setAutoUpdateMap(boolean value) {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("autoUpdateMap", value);
-        editor.apply();
-    }
-
-    /**
-     * 获取上次定位的场景名称
-     * @return 场景名
-     */
-    public String getLastSceneName() {
-        return preferences.getString("lastSceneName", "");
-    }
-
-    /**
-     * 设置上次定位的场景名称
-     * @param value 场景名
-     */
-    public void setLastSceneName(String value) {
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("lastSceneName", value);
-        editor.apply();
-    }
-
-    /**
-     * 获取上次定位的场景的比例尺
-     * @return 比例尺
-     */
-    public float getLastSceneScale() {
-        return preferences.getFloat("lastSceneScale", 0f);
-    }
-
-    /**
-     * 设置上次定位的场景的比例尺
-     * @param value 比例尺
-     */
-    public void setLastSceneScale(float value) {
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putFloat("lastSceneScale", value);
         editor.apply();
     }
 

@@ -25,6 +25,7 @@ import com.saiya.indoorposapp.tools.postioning.Algorithms;
 import com.saiya.indoorposapp.tools.postioning.AverageFilter;
 import com.saiya.indoorposapp.tools.postioning.Filter;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -194,7 +195,9 @@ public class UpdateFPFragment extends Fragment implements View.OnClickListener{
             StringBuilder rssi = new StringBuilder();
             for (int i = 0; i < NUMBER_OF_UPDATE_WIFIAP && i < wifiScanResultAveraged.size(); ++i) {
                 mac.append(wifiScanResultAveraged.get(i).getMac()).append(",");
-                rssi.append(wifiScanResultAveraged.get(i).getRssi()).append(",");
+                BigDecimal b = new BigDecimal(wifiScanResultAveraged.get(i).getRssi())
+                        .setScale(3, BigDecimal.ROUND_HALF_UP);
+                rssi.append(b).append(",");
             }
             mac.deleteCharAt(mac.length() - 1);
             rssi.deleteCharAt(rssi.length() - 1);

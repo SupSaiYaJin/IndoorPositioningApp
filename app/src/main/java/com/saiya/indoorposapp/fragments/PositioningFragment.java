@@ -1,6 +1,8 @@
 package com.saiya.indoorposapp.fragments;
 
 
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.saiya.indoorposapp.R;
@@ -20,7 +23,7 @@ import com.saiya.indoorposapp.bean.SceneInfo;
 import com.saiya.indoorposapp.exceptions.UnauthorizedException;
 import com.saiya.indoorposapp.tools.HttpUtils;
 import com.saiya.indoorposapp.tools.PositioningResponse;
-import com.saiya.indoorposapp.tools.PreferencessHelper;
+import com.saiya.indoorposapp.tools.PreferencesHelper;
 import com.saiya.indoorposapp.ui.MapView;
 
 import java.io.File;
@@ -55,13 +58,11 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
     /** 指示定位是否正在进行中 */
     private boolean isRunning = false;
     /** 得到当前用户的设置文件 */
-    private PreferencessHelper preferences;
+    private PreferencesHelper preferences;
     /** 显示地图的MapView */
     private MapView mv_positioning_map;
     /** 定位的场景名 */
-    private String mSceneName;
-    /** 定位的场景地图的比例尺 */
-    private float mMapScale;
+    private String mSceneName = "";
     /** 用于发起定位请求的单线程池 */
     private ExecutorService singleThreadPool;
     /** 管理图片缓存与图片加载 */
@@ -158,6 +159,7 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         mActivity = (MainActivity)getActivity();
         mv_positioning_map = (MapView) mActivity.findViewById(R.id.mv_positioning_map);
         mv_positioning_map.setOnMovingListener(mActivity.getMyViewPager());
+        //根据用户设置初始化定位参数
         preferences =  mActivity.getPreferences();
         mLocationMethod = preferences.getLocationMethod();
         mLocationInterval = preferences.getLocationInterval();
@@ -165,15 +167,25 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         Button btn_positioning_start = (Button) mActivity.findViewById(R.id.btn_positioning_start);
         Button btn_positioning_stop = (Button) mActivity.findViewById(R.id.btn_positioning_stop);
         Button btn_positioning_switch = (Button) mActivity.findViewById(R.id.btn_positioning_switch);
+        LinearLayout ll_positioning_bar = (LinearLayout) mActivity.findViewById(R.id.ll_positioning_bar);
         btn_positioning_start.setOnClickListener(this);
         btn_positioning_stop.setOnClickListener(this);
         btn_positioning_switch.setOnClickListener(this);
-        mSceneName = preferences.getLastSceneName();
-        mMapScale = preferences.getLastSceneScale();
+        //初始化用于定位的线程池与图片加载器
         singleThreadPool = Executors.newSingleThreadExecutor();
         imageLoader = new ImageLoader();
-        if (mSceneName != null && mMapScale != 0f) {
-            new SetMapTask().execute(new SceneInfo(mSceneName, mMapScale, 0));
+        //属性动画
+        PropertyValuesHolder scaleX = PropertyValuesHolder.ofFloat("scaleX", 0, 1);
+        PropertyValuesHolder scaleY = PropertyValuesHolder.ofFloat("scaleY", 0, 1);
+        PropertyValuesHolder alpha = PropertyValuesHolder.ofFloat("alpha", 0, 0.5f);
+        PropertyValuesHolder translationY = PropertyValuesHolder.ofFloat("translationY", 800, 0);
+        ObjectAnimator objectAnimator = ObjectAnimator.ofPropertyValuesHolder(ll_positioning_bar,
+                scaleX, scaleY, alpha, translationY);
+        objectAnimator.setDuration(2000);
+        objectAnimator.start();
+        //定位用户所在场景
+        if (mActivity.checkWifiState()) {
+            new LocateSceneTask().execute();
         }
     }
 
@@ -182,8 +194,11 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      */
     @Override
     public void onStart() {
+        if (!mSceneName.equals("") && !isRunning) {
+            isRunning = true;
+            singleThreadPool.submit(mLocateRunnable);
+        }
         super.onStart();
-        startLocation();
     }
 
     /**
@@ -217,15 +232,14 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      */
     private void startLocation() {
         if (!mActivity.checkWifiState()) {
-            Toast.makeText(mActivity, R.string.activity_main_wifiDisabled, Toast.LENGTH_SHORT).show();
             return;
         }
         if (mSceneName.equals("")) {
             Toast.makeText(mActivity, R.string.fragment_positioning_plzChooseScene, Toast.LENGTH_SHORT).show();
             return;
         }
-        Toast.makeText(mActivity, R.string.fragment_positioning_positioningStarted, Toast.LENGTH_SHORT).show();
         if (!isRunning) {
+            Toast.makeText(mActivity, R.string.fragment_positioning_positioningStarted, Toast.LENGTH_SHORT).show();
             isRunning = true;
             singleThreadPool.submit(mLocateRunnable);
         }
@@ -235,8 +249,10 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
      * 停止定位
      */
     private void stopLocation() {
-        Toast.makeText(mActivity, R.string.fragment_positioning_positioningStoped, Toast.LENGTH_SHORT).show();
-        isRunning = false;
+        if (isRunning) {
+            Toast.makeText(mActivity, R.string.fragment_positioning_positioningStoped, Toast.LENGTH_SHORT).show();
+            isRunning = false;
+        }
     }
 
     /**
@@ -251,13 +267,40 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
                         new SetMapTask().execute(sceneInfo);
                     }
                     mSceneName = sceneInfo.getSceneName();
-                    mMapScale = sceneInfo.getScale();
-                    preferences.setLastSceneName(mSceneName);
-                    preferences.setLastSceneScale(mMapScale);
                 }
             }).execute();
         } else {
             Toast.makeText(mActivity, R.string.fragment_positioning_positioningRunning, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * 获取终端场景的异步任务
+     */
+    private class LocateSceneTask extends AsyncTask<Void, Void, SceneInfo> {
+
+        @Override
+        protected SceneInfo doInBackground(Void... params) {
+            SceneInfo sceneInfo;
+            try {
+                sceneInfo = HttpUtils.locateScene(mActivity.getWifiScanResult(10)[0]);
+            } catch (UnauthorizedException e) {
+                e.printStackTrace();
+                Message msg = Message.obtain();
+                msg.obj = PositioningResponse.UNAUTHORIZED;
+                mActivity.getMyHandler().sendMessage(msg);
+                return null;
+            }
+            return sceneInfo;
+        }
+
+        @Override
+        protected void onPostExecute(SceneInfo sceneInfo) {
+            if (sceneInfo != null) {
+                mSceneName = sceneInfo.getSceneName();
+                new SetMapTask().execute(sceneInfo);
+                startLocation();
+            }
         }
     }
 
@@ -306,11 +349,9 @@ public class PositioningFragment extends Fragment implements View.OnClickListene
         }
 
         private void addToCache(String sceneName, Bitmap bitmap) {
-            if (!memoryCache.containsKey(sceneName)) {
-                memoryCache.put(sceneName, bitmap);
-                bytesUsed += bitmap.getAllocationByteCount();
-                checkSize();
-            }
+            memoryCache.put(sceneName, bitmap);
+            bytesUsed += bitmap.getAllocationByteCount();
+            checkSize();
         }
 
         private void checkSize() {

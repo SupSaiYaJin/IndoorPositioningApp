@@ -45,6 +45,18 @@ public class JSONHelper {
         return AuthResponse.UNEXPECTED_ERROR;
     }
 
+    public static SceneInfo getLocateScene(String jsonResponse) {
+        try {
+            JSONObject jsonObject = new JSONObject(jsonResponse);
+            String sceneName = jsonObject.getString("sceneName");
+            float sceneScale = (float) jsonObject.getDouble("scale");
+            long lastUpdateTime = jsonObject.getLong("lastUpdateTime");
+            return new SceneInfo(sceneName, sceneScale, lastUpdateTime);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
     /**
      * 解析获取地图列表的响应
      * @param jsonResponse 服务器对获取地图列表请求的响应字符串

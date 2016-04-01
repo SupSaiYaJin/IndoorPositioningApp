@@ -10,7 +10,6 @@ import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 
 import com.saiya.indoorposapp.R;
@@ -68,7 +67,7 @@ public class MapView extends ImageView {
         mImageWidth = bm.getWidth();
         mImageHeight = bm.getHeight();
         this.mapScale = mapScale;
-        if (getWidth() == 0) {
+/*        if (getWidth() == 0) {
             ViewTreeObserver vto = getViewTreeObserver();
             vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                 public boolean onPreDraw() {
@@ -80,7 +79,8 @@ public class MapView extends ImageView {
             });
         } else {
             initData();
-        }
+        }*/
+        initData();
     }
 
     private void initData() {
@@ -88,14 +88,9 @@ public class MapView extends ImageView {
         int vheight = getHeight();
         /* 模板Matrix,用以初始化 */
         Matrix mMatrix = new Matrix();
-        float dx = 0, dy = 0;
-        if (mImageWidth * vheight > vwidth * mImageHeight) {
-            mScale = (float) vheight / (float) mImageHeight;
-            dx = (vwidth - mImageWidth * mScale) / 2;
-        } else {
-            mScale = (float) vwidth / (float) mImageWidth;
-            dy = (vheight - mImageHeight * mScale) / 2;
-        }
+        mScale = (float) vheight / (float) mImageHeight;
+        float dx = (vwidth - mImageWidth * mScale) / 2;
+        float dy = 0;
         mMatrix.setScale(mScale, mScale);
         mMatrix.postTranslate(dx, dy);
         setImageMatrix(mMatrix);
@@ -236,10 +231,10 @@ public class MapView extends ImageView {
             mRightDragable = true;
             mFirstMove = true;
             getImageMatrix().getValues(tempValues);
-            //图片左边缘离开左边界，表示不可右移
+/*            //图片左边缘离开左边界，表示不可右移
             if (tempValues[Matrix.MTRANS_X] >= 0) {
                 mRightDragable = false;
-            }
+            }*/
             //图片右边缘离开右边界，表示不可左移
             if (tempValues[Matrix.MTRANS_X] <= getWidth() - mImageWidth * tempValues[Matrix.MSCALE_X]) {
                 mLeftDragable = false;
@@ -279,15 +274,13 @@ public class MapView extends ImageView {
             if (values[Matrix.MSCALE_X] >= mScale) {
                 if (values[Matrix.MTRANS_Y] + dy > 0) {
                     dy = -values[Matrix.MTRANS_Y];
-                }
-                if (values[Matrix.MTRANS_Y] + dy < height - mImageHeight * values[Matrix.MSCALE_Y]) {
+                } else if (values[Matrix.MTRANS_Y] + dy < height - mImageHeight * values[Matrix.MSCALE_Y]) {
                     dy = height - mImageHeight * values[Matrix.MSCALE_Y] - values[Matrix.MTRANS_Y];
                 }
             } else {
                 if (values[Matrix.MTRANS_Y] + dy < 0) {
                     dy = -values[Matrix.MTRANS_Y];
-                }
-                if (values[Matrix.MTRANS_Y] + dy > height - mImageHeight * values[Matrix.MSCALE_Y]) {
+                } else if (values[Matrix.MTRANS_Y] + dy > height - mImageHeight * values[Matrix.MSCALE_Y]) {
                     dy = height - mImageHeight * values[Matrix.MSCALE_Y] - values[Matrix.MTRANS_Y];
                 }
             }
@@ -310,25 +303,23 @@ public class MapView extends ImageView {
                 }
                 return 0;
             }
-            if (!mRightDragable && dx > 0) {
+/*            if (!mRightDragable && dx > 0) {
                 //加入和y轴的对比，表示在监听到垂直方向的手势时不切换Item
                 if (Math.abs(dx) * 0.4f > Math.abs(dy) && mFirstMove) {
                     stopDrag();
                 }
                 return 0;
-            }
+            }*/
             mLeftDragable = true;
             mRightDragable = true;
-            if (mFirstMove) {
-                mFirstMove = false;
-            }
+            mFirstMove = false;
             if (mImageWidth * values[Matrix.MSCALE_X] < width) {
-                return 0;
+                return -values[Matrix.MTRANS_X];
             }
             if (values[Matrix.MTRANS_X] + dx > 0) {
                 dx = -values[Matrix.MTRANS_X];
-            } else if
-            (values[Matrix.MTRANS_X] + dx < -(mImageWidth * values[Matrix.MSCALE_X] - width)) {
+            } else if (values[Matrix.MTRANS_X] + dx <
+                    width - mImageWidth * values[Matrix.MSCALE_X]) {
                 dx = -(mImageWidth * values[Matrix.MSCALE_X] - width) - values[Matrix.MTRANS_X];
             }
             return dx;
@@ -351,39 +342,10 @@ public class MapView extends ImageView {
                 mCurrentMatrix.set(getImageMatrix());//初始化Matrix
                 mCurrentMatrix.getValues(tempValues);
                 scale = checkScale(scale, tempValues);
-                PointF centerF = getCenter(scale, tempValues);
-                mCurrentMatrix.postScale(scale, scale, centerF.x, centerF.y);
-                if (scale * tempValues[Matrix.MSCALE_X] < mScale) {
-                    mCurrentMatrix.postTranslate(-tempValues[Matrix.MTRANS_X], 0);
-                }
+                mCurrentMatrix.postScale(scale, scale, getWidth() / 2, getHeight() / 2);
+                mCurrentMatrix.getValues(tempValues);
                 setImageMatrix(mCurrentMatrix);
             }
-        }
-
-        /**
-         * 获取缩放的中心点。
-         *
-         * @param scale  要缩放的倍数
-         * @param values 当前矩阵的值
-         * @return 缩放中心点
-         */
-        private PointF getCenter(float scale, float[] values) {
-            //缩放级别小于原始缩放级别时或者为放大状态时，返回ImageView中心点作为缩放中心点
-            if (scale * values[Matrix.MSCALE_X] < mScale || scale >= 1) {
-                return new PointF(getWidth() / 2, getHeight() / 2);
-            }
-            float cx = getWidth() / 2;
-            float cy = getHeight() / 2;
-            //以ImageView中心点为缩放中心，判断缩放后的图片左边缘是否会离开ImageView左边缘，是的话以左边缘为X轴中心
-            if ((getWidth() / 2 - values[Matrix.MTRANS_X]) * scale < getWidth() / 2) {
-                cx = 0;
-            }
-            //判断缩放后的右边缘是否会离开ImageView右边缘，是的话以右边缘为X轴中心
-            if
-            ((mImageWidth * values[Matrix.MSCALE_X] + values[Matrix.MTRANS_X]) * scale < getWidth()) {
-                cx = getWidth();
-            }
-            return new PointF(cx, cy);
         }
 
         /**
