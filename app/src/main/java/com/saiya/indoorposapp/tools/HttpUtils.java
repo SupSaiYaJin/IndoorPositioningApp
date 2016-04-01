@@ -103,6 +103,7 @@ public class HttpUtils {
             BufferedOutputStream out = new BufferedOutputStream(conn.getOutputStream());
             out.write(content);
             out.flush();
+            long postTime = System.currentTimeMillis();
             //更新JSESSIONID,仅在登录成功后使用
             String cookie = conn.getHeaderField("Set-Cookie");
             if (cookie != null) {
@@ -110,7 +111,6 @@ public class HttpUtils {
                 int end = cookie.indexOf(';');
                 JSESSIONID = cookie.substring(start + 11, end);
             }
-            long postTime = System.currentTimeMillis();
             //读取响应,并转化为字符串返回
             StringBuilder stringBuilder = new StringBuilder();
             String line;
