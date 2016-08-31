@@ -62,15 +62,15 @@ public class RegisterActivity extends Activity implements View.OnClickListener{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_register);
         initView();
         ActivityCollector.addActivity(this);
     }
 
     /**
-     * 初始化试图并找到控件
+     * 初始化视图并找到控件
      */
     private void initView() {
+        setContentView(R.layout.activity_register);
         Button btn_register_confirm = (Button) findViewById(R.id.btn_register_confirm);
         edtTxt_register_username = (EditText) findViewById(R.id.edtTxt_register_username);
         edtTxt_register_password = (EditText) findViewById(R.id.edtTxt_register_password);
